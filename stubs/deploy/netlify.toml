@@ -1,0 +1,3 @@
+[build]
+command = "composer install && php artisan docs:build"
+publish = "build/docs"

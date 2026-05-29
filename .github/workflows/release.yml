@@ -1,0 +1,72 @@
+name: Release
+
+on:
+  workflow_run:
+    workflows: ["CI/CD"]
+    branches: [main]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    name: Release Please
+    if: |
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+      github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      prs_created: ${{ steps.release.outputs.prs_created }}
+      pr: ${{ steps.release.outputs.pr }}
+      prs: ${{ steps.release.outputs.prs }}
+    steps:
+      - uses: google-github-actions/release-please-action@v4
+        id: release
+        with:
+          release-type: php
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-docs:
+    needs: [release-please]
+    if: needs.release-please.outputs.release_created
+    uses: ./.github/workflows/github-pages.yml
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+
+  cleanup-release-please:
+    name: Cleanup Branch
+    needs: [release-please]
+    if: needs.release-please.outputs.release_created
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_JSON: ${{ needs.release-please.outputs.pr }}
+        run: |
+          if [ -z "$PR_JSON" ] || [ "$PR_JSON" == "null" ]; then
+            echo "No PR information found in outputs. Searching for merged release PR..."
+            # Find the PR merged into the current commit
+            SHA="${{ github.event.workflow_run.head_sha || github.sha }}"
+            PR_JSON=$(gh api "repos/${{ github.repository }}/commits/$SHA/pulls" --jq '.[0] | select(.head.ref | startswith("release-please-"))')
+          fi
+
+          if [ -z "$PR_JSON" ] || [ "$PR_JSON" == "null" ]; then
+            echo "Could not determine release-please branch from commit. Checking last merged PR..."
+            BRANCH=$(gh pr list --state merged --limit 1 --json headRefName --jq '.[0].headRefName | select(startswith("release-please-"))')
+          else
+            BRANCH=$(echo "$PR_JSON" | jq -r '.head_ref // .head.ref // empty')
+          fi
+
+          if [ -n "$BRANCH" ] && [[ "$BRANCH" == release-please-* ]]; then
+            echo "Deleting branch: $BRANCH"
+            gh api -X DELETE "/repos/${{ github.repository }}/git/refs/heads/$BRANCH" || true
+          else
+            echo "No release-please branch found to delete ($BRANCH)."
+          fi

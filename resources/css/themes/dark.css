@@ -1,0 +1,41 @@
+:root {
+    --inkstone-bg: #080c11;
+    --inkstone-panel: #0d141c;
+    --inkstone-header: #0a1017;
+    --inkstone-control: #101923;
+    --inkstone-control-hover: #172231;
+    --inkstone-search-bg: #101923;
+    --inkstone-text: #d8dee8;
+    --inkstone-heading: #ffffff;
+    --inkstone-muted: #8f9bad;
+    --inkstone-border: #223043;
+    --inkstone-border-soft: #1a2534;
+    --inkstone-border-strong: #3a4a61;
+    --inkstone-accent: #a78bfa;
+    --inkstone-link: #c4b5fd;
+    --inkstone-focus: rgb(167 139 250 / 18%);
+    --inkstone-wash: rgb(167 139 250 / 8%);
+    --inkstone-nav-active: #151f2d;
+    --inkstone-code-bg: #0b1118;
+    --inkstone-code-bar: #101923;
+    --inkstone-code-text: #e5e7eb;
+    --inkstone-inline-code: #171329;
+    --inkstone-inline-code-text: #c4b5fd;
+    --inkstone-highlight: rgb(167 139 250 / 20%);
+    --inkstone-quote-bg: #101923;
+    --inkstone-table-head: #101923;
+    --inkstone-demo-output: #0b1118;
+    --inkstone-copy-bg: rgb(13 20 28 / 84%);
+    --inkstone-mark: rgb(167 139 250 / 25%);
+    --inkstone-scrollbar: #334155;
+    --inkstone-font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --inkstone-font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    --inkstone-control-shadow: 0 1px 2px rgb(0 0 0 / 32%);
+    --inkstone-panel-shadow: 0 20px 60px rgb(0 0 0 / 34%);
+    --inkstone-code-shadow: 0 16px 42px rgb(0 0 0 / 22%);
+    --inkstone-search-shadow: 0 24px 70px rgb(0 0 0 / 42%);
+}
+
+.dark {
+    color-scheme: dark;
+}

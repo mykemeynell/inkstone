@@ -1,0 +1,4 @@
+{
+  "buildCommand": "composer install && php artisan docs:build",
+  "outputDirectory": "build/docs"
+}
