@@ -74,6 +74,8 @@ return [
 
         'name' => 'default',
 
+        'layout' => 'default',
+
         'available' => [
             'default',
             'light',

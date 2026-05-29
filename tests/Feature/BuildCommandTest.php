@@ -60,6 +60,32 @@ final class BuildCommandTest extends TestCase
         $this->assertStringNotContainsString('/docs/assets/', $html);
     }
 
+    public function test_available_css_themes_use_the_default_layout_when_no_theme_view_exists(): void
+    {
+        config()->set('inkstone.theme.name', 'ember');
+        config()->set('inkstone.theme.layout', 'default');
+
+        $this->artisan('docs:build')->assertExitCode(0);
+
+        $html = file_get_contents($this->outputPath.'/index.html') ?: '';
+
+        $this->assertStringContainsString('href="/docs/assets/css/themes/ember.css"', $html);
+        $this->assertStringContainsString('Inkstone Documentation', $html);
+    }
+
+    public function test_missing_theme_layout_falls_back_to_the_default_layout(): void
+    {
+        config()->set('inkstone.theme.name', 'forest');
+        config()->set('inkstone.theme.layout', 'missing-layout');
+
+        $this->artisan('docs:build')->assertExitCode(0);
+
+        $html = file_get_contents($this->outputPath.'/index.html') ?: '';
+
+        $this->assertStringContainsString('href="/docs/assets/css/themes/forest.css"', $html);
+        $this->assertStringContainsString('Inkstone Documentation', $html);
+    }
+
     public function test_it_discovers_source_logo_and_favicon_assets(): void
     {
         $filesystem = new Filesystem;

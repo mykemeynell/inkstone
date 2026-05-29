@@ -355,9 +355,14 @@ h6:hover .heading-anchor,
     border-radius: 8px;
     box-shadow: var(--inkstone-code-shadow);
     color: var(--inkstone-code-text);
+    font-family: var(--inkstone-font-mono);
+    font-size: .875rem;
+    line-height: 1.65;
     overflow-x: auto;
     padding: 18px 48px 18px 18px;
     position: relative;
+    text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
 }
 
 .inkstone-code-frame {
@@ -402,6 +407,8 @@ h6:hover .heading-anchor,
 
 .inkstone-prose pre code {
     display: block;
+    font-size: inherit;
+    line-height: inherit;
     min-width: max-content;
 }
 
@@ -417,7 +424,6 @@ h6:hover .heading-anchor,
 
 .inkstone-prose code {
     font-family: var(--inkstone-font-mono);
-    font-size: .92em;
 }
 
 .inkstone-prose :not(pre) > code {
@@ -425,6 +431,7 @@ h6:hover .heading-anchor,
     border: 1px solid var(--inkstone-border-soft);
     border-radius: 5px;
     color: var(--inkstone-inline-code-text);
+    font-size: .92em;
     padding: 2px 5px;
 }
 
@@ -699,12 +706,19 @@ h6:hover .heading-anchor,
         bottom: 0;
         box-shadow: var(--inkstone-search-shadow);
         display: none;
-        height: auto;
+        height: calc(100vh - 66px);
+        height: calc(100dvh - 66px);
         left: 0;
-        overflow: auto;
+        max-height: calc(100vh - 66px);
+        max-height: calc(100dvh - 66px);
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: contain;
         position: fixed;
         top: 66px;
+        touch-action: pan-y;
         width: min(330px, 90vw);
+        -webkit-overflow-scrolling: touch;
         z-index: 45;
     }
 

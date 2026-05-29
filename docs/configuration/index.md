@@ -94,6 +94,20 @@ docs/logo.webp
 
 Discovered files are copied into the generated output and linked from the theme.
 
+## Theme Settings
+
+```php
+'theme' => [
+    'name' => 'default',
+    'layout' => 'default',
+    'available' => ['default', 'light', 'dark', 'ember', 'forest'],
+    'dark_mode' => true,
+    'default_mode' => 'system',
+],
+```
+
+`theme.name` selects the CSS variant. `theme.layout` selects the Blade layout, so bundled variants such as `ember` and `forest` can use the default layout.
+
 ## Build Settings
 
 ```php

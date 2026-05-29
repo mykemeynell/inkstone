@@ -46,6 +46,18 @@ Set the active variant:
 ```php
 'theme' => [
     'name' => 'forest',
+    'layout' => 'default',
+],
+```
+
+`theme.name` chooses the CSS variable file. `theme.layout` chooses the Blade layout. The included variants all use the default layout unless you publish or provide another layout.
+
+For example, this uses the Ember colors with the default documentation layout:
+
+```php
+'theme' => [
+    'name' => 'ember',
+    'layout' => 'default',
 ],
 ```
 
@@ -84,6 +96,19 @@ resources/views/vendor/inkstone/themes/default
 ```
 
 Laravel will load published views before package views.
+
+To add a custom layout, create a matching layout directory and set `theme.layout`:
+
+```text
+resources/views/vendor/inkstone/themes/modern/page.blade.php
+```
+
+```php
+'theme' => [
+    'name' => 'default',
+    'layout' => 'modern',
+],
+```
 
 ## Publishing Assets
 

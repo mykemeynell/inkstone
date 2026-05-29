@@ -42,6 +42,7 @@ The footer can be disabled or customized from `site.footer`.
 ```php
 'theme' => [
     'name' => 'default',
+    'layout' => 'default',
     'available' => ['default', 'light', 'dark', 'ember', 'forest'],
     'dark_mode' => true,
     'default_mode' => 'system',
@@ -53,7 +54,7 @@ The footer can be disabled or customized from `site.footer`.
 ],
 ```
 
-`theme.name` selects the CSS variable file loaded after the base stylesheet.
+`theme.name` selects the CSS variable file loaded after the base stylesheet. `theme.layout` selects the Blade layout view and falls back to `default` if the configured layout is unavailable.
 
 ## Markdown
 
