@@ -36,6 +36,7 @@
   },
   "require-dev": {
     "larastan/larastan": "^3.0",
+    "laravel/dusk": "^8.6",
     "laravel/pint": "^1.29",
     "orchestra/testbench": "^11.0",
     "phpstan/phpstan": "^2.1",
