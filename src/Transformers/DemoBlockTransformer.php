@@ -10,6 +10,7 @@ use Inkstone\Contracts\DemoRuntime;
 use Inkstone\Contracts\Transformer;
 use Inkstone\Demos\DemoRendererRegistry;
 use Inkstone\DTOs\DemoBlock;
+use Inkstone\DTOs\DemoResult;
 use Inkstone\DTOs\Document;
 use Inkstone\Support\HtmlDocument;
 use RuntimeException;
@@ -56,7 +57,7 @@ final class DemoBlockTransformer implements Transformer
                 );
             }
 
-            $html = $this->renderDemo($blocks[$index], $result->exception ?? $result->value, $result->stdout);
+            $html = $this->renderDemo($result);
             $replacement = $this->createFragment($fragment->document, $html);
             $code->parentNode->parentNode?->replaceChild($replacement, $code->parentNode);
             $index++;
@@ -70,9 +71,76 @@ final class DemoBlockTransformer implements Transformer
      */
     private function demoBlocksFromMarkdown(string $markdown): array
     {
-        preg_match_all('/^(?<fence>`{3,}|~{3,})demo:(?<language>[A-Za-z0-9_-]+)(?<metadata>[^\r\n]*)\R(?<code>.*?)^\k<fence>[ \t]*$/ms', $markdown, $matches, PREG_SET_ORDER);
+        $lines = preg_split('/\R/', $markdown);
 
-        return array_map(fn (array $match): DemoBlock => $this->createBlock($match), $matches);
+        if (! is_array($lines)) {
+            return [];
+        }
+
+        $blocks = [];
+        $count = count($lines);
+
+        for ($index = 0; $index < $count; $index++) {
+            $line = $lines[$index];
+
+            if (! preg_match('/^[ \t]{0,3}(?<fence>`{3,}|~{3,})demo:(?<language>[A-Za-z0-9_-]+)(?<metadata>[^\r\n]*)$/', $line, $match)) {
+                $skippedTo = $this->skipNonDemoFence($lines, $index);
+
+                if ($skippedTo !== null) {
+                    $index = $skippedTo;
+                }
+
+                continue;
+            }
+
+            $fence = (string) $match['fence'];
+            $code = [];
+
+            for ($index++; $index < $count; $index++) {
+                if ($this->isClosingFence($lines[$index], $fence)) {
+                    break;
+                }
+
+                $code[] = $lines[$index];
+            }
+
+            $blocks[] = $this->createBlock([
+                'language' => (string) $match['language'],
+                'metadata' => (string) $match['metadata'],
+                'code' => implode("\n", $code).($code !== [] ? "\n" : ''),
+            ]);
+        }
+
+        return $blocks;
+    }
+
+    /**
+     * @param  list<string>  $lines
+     */
+    private function skipNonDemoFence(array $lines, int $index): ?int
+    {
+        if (! preg_match('/^[ \t]{0,3}(?<fence>`{3,}|~{3,})(?!demo:).*$/', $lines[$index], $match)) {
+            return null;
+        }
+
+        $count = count($lines);
+        $fence = (string) $match['fence'];
+
+        for ($index++; $index < $count; $index++) {
+            if ($this->isClosingFence($lines[$index], $fence)) {
+                return $index;
+            }
+        }
+
+        return $count - 1;
+    }
+
+    private function isClosingFence(string $line, string $openingFence): bool
+    {
+        $character = $openingFence[0];
+        $minimumLength = strlen($openingFence);
+
+        return (bool) preg_match('/^[ \t]{0,3}'.preg_quote($character, '/').'{'.$minimumLength.',}[ \t]*$/', $line);
     }
 
     /**
@@ -117,18 +185,29 @@ final class DemoBlockTransformer implements Transformer
         );
     }
 
-    private function renderDemo(DemoBlock $block, mixed $value, string $stdout): string
+    private function renderDemo(DemoResult $result): string
     {
-        $output = $stdout !== ''
-            ? '<pre><code class="language-text">'.e($stdout).'</code></pre>'
+        $block = $result->block;
+        $value = $result->exception ?? $result->value;
+        $output = $result->stdout !== ''
+            ? '<pre><code class="language-text">'.e($result->stdout).'</code></pre>'
             : ($block->voidOutput && ! (bool) ($this->config['describe_void_output'] ?? false)
                 ? ''
                 : $this->renderers->render($value));
 
-        return '<div class="inkstone-demo" data-demo-language="'.e($block->language).'">'
-            .'<div class="inkstone-demo-tabs">'
-            .'<div class="inkstone-demo-source"><pre><code class="language-'.e($block->language).'">'.e($block->code).'</code></pre></div>'
-            .'<div class="inkstone-demo-output">'.$output.'</div>'
+        if ($result->exception !== null && (bool) ($this->config['show_stack_traces'] ?? false)) {
+            $output .= '<details class="inkstone-demo-stack"><summary>Stack trace</summary><pre><code class="language-text">'.e($result->exception->getTraceAsString()).'</code></pre></details>';
+        }
+
+        return '<div class="inkstone-demo" data-inkstone-demo data-demo-language="'.e($block->language).'">'
+            .'<div class="inkstone-demo-toolbar">'
+            .'<div class="inkstone-demo-tabs" role="tablist" aria-label="Demo panels">'
+            .'<button type="button" class="is-active" role="tab" aria-selected="true" data-inkstone-demo-tab="source">Source</button>'
+            .'<button type="button" role="tab" aria-selected="false" data-inkstone-demo-tab="output">Output</button>'
+            .'</div>'
+            .'</div>'
+            .'<div class="inkstone-demo-panel inkstone-demo-source is-active" role="tabpanel" data-inkstone-demo-panel="source"><pre data-copyable="true"><code class="language-'.e($block->language).'">'.e($block->code).'</code></pre></div>'
+            .'<div class="inkstone-demo-panel inkstone-demo-output" role="tabpanel" data-inkstone-demo-panel="output" hidden>'.$output.'</div>'
             .'</div>'
             .'</div>';
     }

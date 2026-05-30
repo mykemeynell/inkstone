@@ -10,7 +10,7 @@ This page lists the main `inkstone` configuration keys.
 ## Paths
 
 ```php
-'docs_path' => base_path('docs'),
+'source_path' => base_path('docs'),
 'output_path' => base_path('build/docs'),
 ```
 
@@ -18,11 +18,15 @@ This page lists the main `inkstone` configuration keys.
 
 ```php
 'site' => [
-    'title' => env('DOCS_TITLE', 'Inkstone Documentation'),
-    'description' => env('DOCS_DESCRIPTION', 'Project documentation generated with Inkstone.'),
-    'base_url' => env('DOCS_BASE_URL', ''),
+    'title' => env('INKSTONE_TITLE', 'Inkstone Docs'),
+    'description' => env('INKSTONE_DESCRIPTION', 'Project documentation generated with Inkstone.'),
+    'base_url' => env('INKSTONE_BASE_URL', ''),
     'favicon' => null,
-    'logo' => null,
+    'logo' => [
+        'light' => null,
+        'dark' => null,
+    ],
+    'show_title' => true,
     'footer' => [
         'enabled' => true,
         'text' => 'Built with Inkstone',
@@ -33,27 +37,32 @@ This page lists the main `inkstone` configuration keys.
 
 `base_url` defaults to the served root. Set it only when the generated site is mounted below a URL path such as `/docs` or `/my-package`.
 
-`favicon` and `logo` can be explicit URLs or `null` for source-level discovery.
+`favicon` and `logo` can be explicit URLs or `null` for source-level discovery. `logo` accepts a string or an array with `light` and `dark` keys for separate logo variants per theme mode.
 
-The footer can be disabled or customized from `site.footer`.
+The footer can be disabled or customized from `site.footer`. Set `site.show_title` to `false` to hide the site title from the header brand.
 
 ## Theme
 
 ```php
 'theme' => [
     'name' => 'default',
-    'available' => ['default', 'light', 'dark', 'ember', 'forest'],
-    'dark_mode' => true,
+    'layout' => 'default',
     'default_mode' => 'system',
-    'show_table_of_contents' => true,
-    'code_block_theme' => [
-        'light' => Theme::GithubLight,
-        'dark' => Theme::GithubDark,
+    'syntax_highlighting' => [
+        'enabled' => true,
+        'theme' => [
+            'light' => \Phiki\Theme\Theme::GithubLight,
+            'dark' => \Phiki\Theme\Theme::GithubDark,
+        ],
+        'show_line_numbers' => true,
+        'copy_button' => true,
     ],
 ],
 ```
 
-`theme.name` selects the CSS variable file loaded after the base stylesheet.
+`theme.name` selects the CSS variable file loaded after the base stylesheet. `theme.layout` selects the Blade layout view. `theme.default_mode` sets the initial color mode (`system`, `light`, or `dark`).
+
+Syntax highlighting is powered by **Phiki** and occurs at build time.
 
 ## Markdown
 
@@ -73,14 +82,11 @@ Inkstone registers CommonMark core, GitHub Flavored Markdown, and footnotes.
 
 ```php
 'navigation' => [
-    'auto_generate' => true,
-    'sort' => 'frontmatter',
-    'fallback_sort' => 'alphabetical',
-    'max_depth' => 10,
+    'expanded' => [],
 ],
 ```
 
-Navigation ordering comes from frontmatter `order`.
+Navigation ordering comes from frontmatter `order`. The `expanded` key controls which sidebar sections start expanded: set to `true` (all expanded), `false` (only the active section), or an array of slugs to expand specific sections.
 
 ## Discovery
 
@@ -102,22 +108,28 @@ Inkstone discovers `.md` and `.markdown` files recursively.
 ```php
 'search' => [
     'enabled' => true,
-    'driver' => 'fuse',
-    'index_path' => 'search-index.json',
-    'include_headings' => true,
-    'include_content' => true,
+    'driver' => env('INKSTONE_SEARCH_DRIVER', 'json'),
     'max_content_length' => 5000,
+    'type' => 'input',
+    'drivers' => [
+        'json' => [ ... ],
+        'lunr' => [ ... ],
+        'algolia' => [ ... ],
+        'typesense' => [ ... ],
+    ],
 ],
 ```
 
-Search is static and client-side.
+`search.type` controls the search trigger UI: `'input'` shows a search box with keyboard shortcut badge, `'button'` shows an icon button.
+
+Inkstone supports multiple search drivers. Local drivers (`json`, `lunr`) generate an index file, while remote drivers (`algolia`, `typesense`) push data directly to their respective APIs.
 
 ## GitHub
 
 ```php
 'github' => [
-    'repository' => env('DOCS_GITHUB_REPOSITORY', 'https://github.com/vendor/package'),
-    'branch' => env('DOCS_GITHUB_BRANCH', 'main'),
+    'repository' => env('INKSTONE_GITHUB_REPOSITORY', '...'),
+    'branch' => env('INKSTONE_GITHUB_BRANCH', 'main'),
     'rewrite_relative_links' => true,
     'rewrite_images' => true,
 ],
@@ -133,25 +145,14 @@ Relative repository links are rewritten to raw GitHub URLs.
     'pretty_urls' => true,
     'generate_sitemap' => true,
     'generate_robots_txt' => true,
-    'minify_html' => false,
     'asset_hashing' => true,
+    'assets' => [
+        'additional_paths' => [ ... ],
+        'dist_path' => null,
+        'manifest_path' => null,
+    ],
 ],
 ```
-
-## Syntax Highlighting
-
-```php
-'syntax_highlighting' => [
-    'enabled' => true,
-    'driver' => 'phiki',
-    'theme_light' => 'github-light',
-    'theme_dark' => 'github-dark',
-    'show_line_numbers' => true,
-    'copy_button' => true,
-],
-```
-
-Phiki is used at build time.
 
 ## Demos
 
@@ -161,6 +162,12 @@ Phiki is used at build time.
     'execute_php' => true,
     'execute_blade' => true,
     'describe_void_output' => false,
+    'use_disposable_database' => false,
+    'database' => [
+        'connection' => 'inkstone_demo',
+        'database' => ':memory:',
+    ],
+    'show_stack_traces' => false,
     'sandbox' => [
         'enabled' => true,
         'timeout' => 5,
@@ -171,7 +178,7 @@ Phiki is used at build time.
 ],
 ```
 
-Demo blocks are static build-time examples.
+Demo blocks are static build-time examples. `describe_void_output` controls whether void demo output is described textually. `use_disposable_database` creates an in-memory SQLite database per demo. `database` configures the database connection. `show_stack_traces` controls stack trace rendering for demo exceptions.
 
 ## Local Server
 
@@ -179,8 +186,6 @@ Demo blocks are static build-time examples.
 'server' => [
     'host' => '127.0.0.1',
     'port' => 8080,
-    'watch' => true,
-    'open_browser' => true,
 ],
 ```
 

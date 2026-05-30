@@ -18,15 +18,18 @@ use Inkstone\Contracts\SearchIndexer;
 use Inkstone\Contracts\StaticSiteGenerator;
 use Inkstone\Contracts\Transformer;
 use Inkstone\Demos\DemoRendererRegistry;
+use Inkstone\Demos\DemoRuntimeResolver;
 use Inkstone\Demos\SimpleDemoRuntime;
 use Inkstone\Generators\StaticDocumentationGenerator;
 use Inkstone\Parsers\CommonMarkMarkdownParser;
 use Inkstone\Pipelines\TransformerPipeline;
 use Inkstone\Renderers\BladeDocumentRenderer;
-use Inkstone\Search\JsonSearchIndexer;
+use Inkstone\Services\AssetManifest;
 use Inkstone\Services\FilesystemDocumentDiscoverer;
 use Inkstone\Services\FileSystemWriter;
+use Inkstone\Services\LocalDocumentationServer;
 use Inkstone\Services\NavigationBuilder;
+use Inkstone\Services\SearchDriverConfig;
 use Inkstone\Services\ThemeResolver;
 use Inkstone\Transformers\DemoBlockTransformer;
 use Inkstone\Transformers\GitHubRelativeLinkTransformer;
@@ -43,7 +46,7 @@ class InkstoneServiceProvider extends ServiceProvider
 
         $this->app->singleton(DocumentDiscoverer::class, function (): DocumentDiscoverer {
             return new FilesystemDocumentDiscoverer(
-                (string) config('inkstone.docs_path'),
+                (string) config('inkstone.source_path'),
                 (string) config('inkstone.site.base_url', ''),
                 (bool) config('inkstone.build.pretty_urls', true),
                 (array) config('inkstone.discovery.ignore', []),
@@ -55,14 +58,32 @@ class InkstoneServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(NavigationBuilderContract::class, NavigationBuilder::class);
-        $this->app->singleton(SearchIndexer::class, JsonSearchIndexer::class);
+        $this->app->singleton(SearchDriverConfig::class);
+        $this->app->singleton(SearchIndexer::class, function ($app): SearchIndexer {
+            $config = $app->make(SearchDriverConfig::class);
+            $indexer = $app->make($config->driverClass(), $config->parameters());
+
+            if (! $indexer instanceof SearchIndexer) {
+                throw new \RuntimeException('Configured search driver must implement '.SearchIndexer::class.'.');
+            }
+
+            return $indexer;
+        });
         $this->app->singleton(ThemeResolver::class);
+        $this->app->singleton(AssetManifest::class);
         $this->app->singleton(DocumentRenderer::class, BladeDocumentRenderer::class);
         $this->app->singleton(FileSystemWriter::class);
+        $this->app->singleton(LocalDocumentationServer::class);
         $this->app->singleton(DemoRendererRegistry::class);
+        $this->app->singleton(DemoRuntimeResolver::class, function (): DemoRuntimeResolver {
+            return new DemoRuntimeResolver((array) config('inkstone.demos', []));
+        });
 
-        $this->app->singleton(SimpleDemoRuntime::class, function (): SimpleDemoRuntime {
-            return new SimpleDemoRuntime((array) config('inkstone.demos', []));
+        $this->app->singleton(SimpleDemoRuntime::class, function ($app): SimpleDemoRuntime {
+            return new SimpleDemoRuntime(
+                (array) config('inkstone.demos', []),
+                $app->make(DemoRuntimeResolver::class),
+            );
         });
 
         $this->app->singleton(TransformerPipeline::class, function ($app): TransformerPipeline {
@@ -90,10 +111,7 @@ class InkstoneServiceProvider extends ServiceProvider
         });
 
         $this->app->bind(SyntaxHighlightTransformer::class, function (): SyntaxHighlightTransformer {
-            $config = (array) config('inkstone.syntax_highlighting', []);
-            $config['code_block_theme'] = config('inkstone.theme.code_block_theme', []);
-
-            return new SyntaxHighlightTransformer($config);
+            return new SyntaxHighlightTransformer((array) config('inkstone.theme.syntax_highlighting', []));
         });
 
         $this->app->bind(DemoBlockTransformer::class, function ($app): DemoBlockTransformer {

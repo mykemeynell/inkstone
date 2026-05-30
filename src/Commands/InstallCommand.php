@@ -55,7 +55,7 @@ final class InstallCommand extends Command
             $this->installDirectory($filesystem, __DIR__.'/../../stubs/ai', base_path('inkstone/ai'), $force);
         }
 
-        $this->installDirectory($filesystem, __DIR__.'/../../stubs/docs', (string) config('inkstone.docs_path'), $force);
+        $this->installDirectory($filesystem, __DIR__.'/../../stubs/docs', (string) config('inkstone.source_path'), $force);
         $this->installDirectory($filesystem, __DIR__.'/../../stubs/deploy', base_path('deploy/inkstone'), $force);
         $this->writeFile($filesystem, base_path('build/.gitignore'), "*\n!.gitignore\n", $force);
 

@@ -15,7 +15,7 @@ Inkstone is normally installed as a development dependency because it generates 
 
 ## Requirements
 
-- PHP 8.3 or newer
+- PHP 8.2 or newer
 - Composer
 - Laravel 11, 12, or 13 when using the Artisan workflow
 - No full Laravel application when using the standalone CLI

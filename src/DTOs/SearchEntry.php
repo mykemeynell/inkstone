@@ -15,10 +15,11 @@ final class SearchEntry
         public readonly string $excerpt,
         public readonly string $content,
         public readonly array $headings = [],
+        public readonly ?string $section = null,
     ) {}
 
     /**
-     * @return array{title: string, url: string, excerpt: string, content: string, headings: list<array{level: int, text: string, id: string}>}
+     * @return array{title: string, url: string, excerpt: string, content: string, headings: list<array{level: int, text: string, id: string}>, section: string|null}
      */
     public function toArray(): array
     {
@@ -28,6 +29,7 @@ final class SearchEntry
             'excerpt' => $this->excerpt,
             'content' => $this->content,
             'headings' => $this->headings,
+            'section' => $this->section,
         ];
     }
 }

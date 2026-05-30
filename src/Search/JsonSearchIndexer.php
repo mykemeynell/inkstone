@@ -5,31 +5,35 @@ declare(strict_types=1);
 namespace Inkstone\Search;
 
 use Inkstone\Contracts\SearchIndexer;
-use Inkstone\DTOs\Document;
-use Inkstone\DTOs\Heading;
-use Inkstone\DTOs\SearchEntry;
+use Inkstone\Services\FileSystemWriter;
 
 final class JsonSearchIndexer implements SearchIndexer
 {
-    public function index(array $documents): array
+    public function __construct(
+        private readonly ?string $indexPath,
+        private readonly int $maxContentLength,
+        private readonly FileSystemWriter $writer,
+        private readonly SearchEntryBuilder $entries,
+    ) {}
+
+    /**
+     * {@inheritDoc}
+     */
+    public function index(array $documents, array $sections = []): array
     {
-        $maxLength = (int) config('inkstone.search.max_content_length', 5000);
+        return $this->entries->build($documents, $this->maxContentLength, $sections);
+    }
 
-        return array_map(function (Document $document) use ($maxLength): SearchEntry {
-            $content = trim(preg_replace('/\s+/', ' ', strip_tags($document->html)) ?? '');
-            $content = mb_substr($content, 0, $maxLength);
+    /**
+     * {@inheritDoc}
+     */
+    public function save(array $index, string $outputPath): void
+    {
+        $indexPath = trim($this->indexPath ?? 'search-index.json', '/');
 
-            return new SearchEntry(
-                title: $document->title(),
-                url: $document->url,
-                excerpt: mb_substr($content, 0, 240),
-                content: $content,
-                headings: array_map(static fn (Heading $heading): array => [
-                    'level' => $heading->level,
-                    'text' => $heading->text,
-                    'id' => $heading->id,
-                ], $document->headings),
-            );
-        }, $documents);
+        $this->writer->write(
+            rtrim($outputPath, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.$indexPath,
+            json_encode($index, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) ?: '[]',
+        );
     }
 }

@@ -1,6 +1,11 @@
 <?php
 
 declare(strict_types=1);
+
+use Inkstone\Search\AlgoliaSearchIndexer;
+use Inkstone\Search\JsonSearchIndexer;
+use Inkstone\Search\LunrSearchIndexer;
+use Inkstone\Search\TypesenseSearchIndexer;
 use Inkstone\Transformers\DemoBlockTransformer;
 use Inkstone\Transformers\ExternalLinkTransformer;
 use Inkstone\Transformers\GitHubRelativeLinkTransformer;
@@ -12,23 +17,15 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Documentation Source Path
+    | Documentation Source & Output
     |--------------------------------------------------------------------------
     |
-    | The directory containing your Markdown documentation files.
+    | The source_path is the directory containing your Markdown documentation.
+    | The output_path is where the generated static site will be written.
     |
     */
 
-    'docs_path' => base_path('docs'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Build Output Path
-    |--------------------------------------------------------------------------
-    |
-    | The generated static documentation site will be written here.
-    |
-    */
+    'source_path' => base_path('docs'),
 
     'output_path' => base_path('build/docs'),
 
@@ -37,24 +34,29 @@ return [
     | Site Metadata
     |--------------------------------------------------------------------------
     |
-    | Global site configuration.
+    | Global site configuration used for SEO and UI elements.
     |
     */
 
     'site' => [
 
-        'title' => env('DOCS_TITLE', 'Inkstone Documentation'),
+        'title' => env('INKSTONE_TITLE', 'Inkstone Docs'),
 
         'description' => env(
-            'DOCS_DESCRIPTION',
+            'INKSTONE_DESCRIPTION',
             'Project documentation generated with Inkstone.'
         ),
 
-        'base_url' => env('DOCS_BASE_URL', ''),
+        'base_url' => env('INKSTONE_BASE_URL', ''),
 
         'favicon' => null,
 
-        'logo' => null,
+        'logo' => [
+            'light' => null,
+            'dark' => null,
+        ],
+
+        'show_title' => true,
 
         'footer' => [
             'enabled' => true,
@@ -66,44 +68,36 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Theme Configuration
+    | Theme & Styling
     |--------------------------------------------------------------------------
+    |
+    | Configure the look and feel of your documentation site.
+    |
     */
 
     'theme' => [
 
         'name' => 'default',
 
-        'available' => [
-            'default',
-            'light',
-            'dark',
-            'ember',
-            'forest',
-        ],
-
-        'dark_mode' => true,
+        'layout' => 'default',
 
         'default_mode' => 'system',
 
-        'sidebar_collapsible' => true,
-
-        'max_content_width' => '4xl',
-
-        'show_table_of_contents' => true,
-
-        'show_breadcrumbs' => true,
-
-        'code_block_theme' => [
-            'light' => Theme::GithubLight,
-            'dark' => Theme::GithubDark,
+        'syntax_highlighting' => [
+            'enabled' => true,
+            'theme' => [
+                'light' => Theme::GithubLight,
+                'dark' => Theme::GithubDark,
+            ],
+            'show_line_numbers' => true,
+            'copy_button' => true,
         ],
 
     ],
 
     /*
     |--------------------------------------------------------------------------
-    | Markdown Configuration
+    | Markdown & Navigation
     |--------------------------------------------------------------------------
     */
 
@@ -114,36 +108,16 @@ return [
         'html_input' => 'allow',
 
         'renderer' => [
-
             'soft_break' => "\n",
-
         ],
 
     ],
 
-    /*
-    |--------------------------------------------------------------------------
-    | Navigation
-    |--------------------------------------------------------------------------
-    */
-
     'navigation' => [
 
-        'auto_generate' => true,
-
-        'sort' => 'frontmatter',
-
-        'fallback_sort' => 'alphabetical',
-
-        'max_depth' => 10,
+        'expanded' => [],
 
     ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Discovery
-    |--------------------------------------------------------------------------
-    */
 
     'discovery' => [
 
@@ -166,15 +140,64 @@ return [
 
         'enabled' => true,
 
-        'driver' => 'fuse',
-
-        'index_path' => 'search-index.json',
-
-        'include_headings' => true,
-
-        'include_content' => true,
+        'driver' => env('INKSTONE_SEARCH_DRIVER', 'json'),
 
         'max_content_length' => 5000,
+
+        'type' => 'input',
+
+        'drivers' => [
+
+            'json' => [
+                'driver' => JsonSearchIndexer::class,
+                'config' => [
+                    'index_path' => 'search-index.json',
+                ],
+            ],
+
+            'lunr' => [
+                'driver' => LunrSearchIndexer::class,
+                'config' => [
+                    'index_path' => 'lunr-index.json',
+                    'scripts' => [
+                        'https://unpkg.com/lunr/lunr.js',
+                    ],
+                ],
+            ],
+
+            'algolia' => [
+                'driver' => AlgoliaSearchIndexer::class,
+                'config' => [
+                    'app_id' => env('INKSTONE_ALGOLIA_APP_ID'),
+                    'api_key' => env('INKSTONE_ALGOLIA_SEARCH_KEY'),
+                    'index_name' => env('INKSTONE_ALGOLIA_INDEX_NAME'),
+                    'scripts' => [
+                        'https://cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js',
+                    ],
+                ],
+            ],
+
+            'typesense' => [
+                'driver' => TypesenseSearchIndexer::class,
+                'config' => [
+                    'server' => [
+                        'nodes' => [
+                            [
+                                'host' => env('INKSTONE_TYPESENSE_HOST', 'localhost'),
+                                'port' => env('INKSTONE_TYPESENSE_PORT', '8108'),
+                                'protocol' => env('INKSTONE_TYPESENSE_PROTOCOL', 'http'),
+                            ],
+                        ],
+                        'api_key' => env('INKSTONE_TYPESENSE_SEARCH_KEY'),
+                        'collection_name' => env('INKSTONE_TYPESENSE_COLLECTION_NAME'),
+                    ],
+                    'scripts' => [
+                        'https://cdn.jsdelivr.net/npm/typesense@1/dist/typesense.umd.js',
+                    ],
+                ],
+            ],
+
+        ],
 
     ],
 
@@ -186,43 +209,14 @@ return [
 
     'github' => [
 
-        /*
-        |--------------------------------------------------------------------------
-        | Repository URL
-        |--------------------------------------------------------------------------
-        |
-        | Examples:
-        |
-        | https://github.com/vendor/package
-        |
-        */
-
         'repository' => env(
-            'DOCS_GITHUB_REPOSITORY',
+            'INKSTONE_GITHUB_REPOSITORY',
             'https://github.com/vendor/package'
         ),
 
-        /*
-        |--------------------------------------------------------------------------
-        | Branch / Tag
-        |--------------------------------------------------------------------------
-        */
-
-        'branch' => env('DOCS_GITHUB_BRANCH', 'main'),
-
-        /*
-        |--------------------------------------------------------------------------
-        | Rewrite Relative Links
-        |--------------------------------------------------------------------------
-        */
+        'branch' => env('INKSTONE_GITHUB_BRANCH', 'main'),
 
         'rewrite_relative_links' => true,
-
-        /*
-        |--------------------------------------------------------------------------
-        | Rewrite Image Sources
-        |--------------------------------------------------------------------------
-        */
 
         'rewrite_images' => true,
 
@@ -230,7 +224,7 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Static Site Generation
+    | Build & Assets
     |--------------------------------------------------------------------------
     */
 
@@ -244,31 +238,15 @@ return [
 
         'generate_robots_txt' => true,
 
-        'minify_html' => false,
-
         'asset_hashing' => true,
 
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Syntax Highlighting
-    |--------------------------------------------------------------------------
-    */
-
-    'syntax_highlighting' => [
-
-        'enabled' => true,
-
-        'driver' => 'phiki',
-
-        'theme_light' => 'github-light',
-
-        'theme_dark' => 'github-dark',
-
-        'show_line_numbers' => true,
-
-        'copy_button' => true,
+        'assets' => [
+            'additional_paths' => [
+                resource_path('docs-assets'),
+            ],
+            'dist_path' => null,
+            'manifest_path' => null,
+        ],
 
     ],
 
@@ -285,84 +263,27 @@ return [
 
         'enabled' => true,
 
-        /*
-        |--------------------------------------------------------------------------
-        | Runtime Execution
-        |--------------------------------------------------------------------------
-        */
-
         'execute_php' => true,
 
         'execute_blade' => true,
-
-        'execute_livewire' => true,
-
-        /*
-        |--------------------------------------------------------------------------
-        | Output Handling
-        |--------------------------------------------------------------------------
-        */
-
-        'render_renderables' => true,
-
-        'dump_non_renderables' => true,
-
-        'pretty_print_arrays' => true,
-
-        'pretty_print_objects' => true,
 
         'describe_void_output' => false,
 
         'use_disposable_database' => false,
 
-        /*
-        |--------------------------------------------------------------------------
-        | Error Handling
-        |--------------------------------------------------------------------------
-        */
-
-        'show_exceptions' => true,
+        'database' => [
+            'connection' => 'inkstone_demo',
+            'database' => ':memory:',
+        ],
 
         'show_stack_traces' => false,
 
-        /*
-        |--------------------------------------------------------------------------
-        | Sandboxing
-        |--------------------------------------------------------------------------
-        */
-
         'sandbox' => [
-
             'enabled' => true,
-
             'timeout' => 5,
-
             'memory_limit' => '128M',
-
             'allow_filesystem_writes' => false,
-
             'allow_process_execution' => false,
-
-        ],
-
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Assets
-    |--------------------------------------------------------------------------
-    */
-
-    'assets' => [
-
-        'copy_images' => true,
-
-        'copy_static_assets' => true,
-
-        'additional_paths' => [
-
-            resource_path('docs-assets'),
-
         ],
 
     ],
@@ -379,10 +300,6 @@ return [
 
         'port' => 8080,
 
-        'watch' => true,
-
-        'open_browser' => true,
-
     ],
 
     /*
@@ -397,38 +314,6 @@ return [
         GitHubRelativeLinkTransformer::class,
         DemoBlockTransformer::class,
         SyntaxHighlightTransformer::class,
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Cache
-    |--------------------------------------------------------------------------
-    */
-
-    'cache' => [
-
-        'enabled' => true,
-
-        'store' => env('DOCS_CACHE_STORE', 'file'),
-
-        'ttl' => 3600,
-
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Experimental Features
-    |--------------------------------------------------------------------------
-    */
-
-    'experimental' => [
-
-        'versioned_docs' => false,
-
-        'component_playgrounds' => false,
-
-        'ai_search' => false,
-
     ],
 
 ];

@@ -36,6 +36,7 @@
   },
   "require-dev": {
     "larastan/larastan": "^3.0",
+    "laravel/dusk": "^8.6",
     "laravel/pint": "^1.29",
     "orchestra/testbench": "^11.0",
     "phpstan/phpstan": "^2.1",
@@ -43,6 +44,7 @@
   },
   "scripts": {
     "test": "./vendor/bin/phpunit",
+    "test:browser": "./vendor/bin/phpunit -c phpunit.dusk.xml.dist",
     "test:coverage": "\"$(which php)\" -dxdebug.coverage_enable=1 -dxdebug.mode=coverage ./vendor/bin/phpunit --coverage-html coverage",
     "test:coverage:serve": "composer test:coverage && open coverage/index.html",
     "lint": "./vendor/bin/pint --test",

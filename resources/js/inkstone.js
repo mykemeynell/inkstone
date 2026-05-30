@@ -12,10 +12,19 @@
     const themeIcon = document.querySelector('[data-inkstone-theme-icon]');
     const navToggle = document.querySelector('[data-inkstone-nav-toggle]');
     const sidebar = document.querySelector('[data-inkstone-sidebar]');
+    const searchOpen = document.querySelector('[data-inkstone-search-open]');
+    const searchClose = document.querySelector('[data-inkstone-search-close]');
+    const searchOverlay = document.querySelector('[data-inkstone-search-overlay]');
     const search = document.querySelector('[data-inkstone-search]');
     const results = document.querySelector('[data-inkstone-search-results]');
     const backToTop = document.querySelector('[data-inkstone-back-to-top]');
     const modes = ['system', 'light', 'dark'];
+
+    if (navigator.platform.includes('Win')) {
+        document.querySelectorAll('.inkstone-keyboard-shortcut').forEach((el) => {
+            el.textContent = el.textContent.replace('⌘', 'Ctrl+');
+        });
+    }
 
     function setIcon(element, name) {
         if (element) {
@@ -66,6 +75,64 @@
         });
     }
 
+    function saveNavState() {
+        const state = {};
+        document.querySelectorAll('.inkstone-nav-parent').forEach((el) => {
+            const slug = el.dataset.slug;
+            if (slug) {
+                state[slug] = el.dataset.collapsed === 'true' ? 'true' : 'false';
+            }
+        });
+        try {
+            localStorage.setItem('inkstone-nav-state', JSON.stringify(state));
+        } catch (e) { /* ignore */ }
+    }
+
+    function restoreNavState() {
+        try {
+            const saved = JSON.parse(localStorage.getItem('inkstone-nav-state'));
+            if (!saved || typeof saved !== 'object') return;
+            document.querySelectorAll('.inkstone-nav-parent').forEach((el) => {
+                const slug = el.dataset.slug;
+                if (slug && saved[slug] !== undefined) {
+                    const collapsed = saved[slug] === 'true';
+                    el.dataset.collapsed = collapsed ? 'true' : 'false';
+                    el.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+                    const children = el.nextElementSibling;
+                    if (children && children.classList.contains('inkstone-nav-children')) {
+                        children.dataset.collapsed = collapsed ? 'true' : 'false';
+                    }
+                }
+            });
+        } catch (e) { /* ignore corrupted data */ }
+    }
+
+    if (sidebar) {
+        sidebar.querySelectorAll('.inkstone-nav-parent').forEach((parent) => {
+            parent.addEventListener('click', () => {
+                const collapsed = parent.dataset.collapsed === 'true';
+                parent.dataset.collapsed = collapsed ? 'false' : 'true';
+                parent.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+
+                const children = parent.nextElementSibling;
+                if (children && children.classList.contains('inkstone-nav-children')) {
+                    children.dataset.collapsed = collapsed ? 'false' : 'true';
+                }
+
+                saveNavState();
+            });
+
+            parent.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    parent.click();
+                }
+            });
+        });
+
+        restoreNavState();
+    }
+
     async function copyText(text) {
         if (navigator.clipboard && window.isSecureContext) {
             await navigator.clipboard.writeText(text);
@@ -109,7 +176,7 @@
         const button = document.createElement('button');
         const code = pre.querySelector('code');
         button.type = 'button';
-        button.className = 'inkstone-copy-button';
+        button.className = 'inkstone-copy-button is-subtle';
         button.setAttribute('aria-label', 'Copy');
         button.setAttribute('title', 'Copy');
         setIcon(button, 'copy');
@@ -118,6 +185,29 @@
             flashCopied(button);
         });
         frame.appendChild(button);
+    });
+
+    document.querySelectorAll('[data-inkstone-demo]').forEach((demo) => {
+        const tabs = Array.from(demo.querySelectorAll('[data-inkstone-demo-tab]'));
+        const panels = Array.from(demo.querySelectorAll('[data-inkstone-demo-panel]'));
+
+        function showPanel(name) {
+            tabs.forEach((tab) => {
+                const active = tab.dataset.inkstoneDemoTab === name;
+                tab.classList.toggle('is-active', active);
+                tab.setAttribute('aria-selected', active ? 'true' : 'false');
+            });
+
+            panels.forEach((panel) => {
+                const active = panel.dataset.inkstoneDemoPanel === name;
+                panel.classList.toggle('is-active', active);
+                panel.hidden = !active;
+            });
+        }
+
+        tabs.forEach((tab) => {
+            tab.addEventListener('click', () => showPanel(tab.dataset.inkstoneDemoTab || 'source'));
+        });
     });
 
     document.querySelectorAll('[data-inkstone-heading-copy]').forEach((anchor) => {
@@ -176,15 +266,74 @@
         return;
     }
 
+    const driver = search.dataset.inkstoneSearchDriver || 'json';
+    const config = JSON.parse(search.dataset.inkstoneSearchConfig || '{}');
     let index = [];
+
+    const utils = {
+        normalize,
+        score: scoreEntry,
+        highlight: highlighted,
+        preview: previewFor,
+        escapeHtml
+    };
+
+    if (searchOpen) {
+        searchOpen.addEventListener('click', openSearch);
+    }
+
+    if (searchClose) {
+        searchClose.addEventListener('click', closeSearch);
+    }
+
+    function openSearch() {
+        if (searchOverlay) {
+            searchOverlay.hidden = false;
+        }
+
+        window.setTimeout(() => search.focus(), 0);
+    }
+
+    function closeSearch() {
+        hideResults();
+        search.value = '';
+
+        if (searchOverlay) {
+            searchOverlay.hidden = true;
+        }
+    }
+
+    document.addEventListener('keydown', (event) => {
+        if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+            event.preventDefault();
+            openSearch();
+        }
+    });
 
     fetch(search.dataset.inkstoneSearchIndex || 'search-index.json')
         .then((response) => response.ok ? response.json() : [])
-        .then((entries) => { index = Array.isArray(entries) ? entries : []; })
+        .then(async (data) => {
+            const entries = Array.isArray(data) ? data : (data.documents || []);
+
+            index = entries.map((doc) => ({
+                title: doc.title || '',
+                url: doc.url || '',
+                content: doc.content || doc.body || '',
+                headings: Array.isArray(doc.headings) && typeof doc.headings[0] === 'string'
+                    ? doc.headings.map((text) => ({ text }))
+                    : (doc.headings || []),
+                excerpt: doc.excerpt || doc.content || doc.body || '',
+                section: doc.section || '',
+            }));
+
+            if (window.InkstoneSearchDriver && typeof window.InkstoneSearchDriver.init === 'function') {
+                await window.InkstoneSearchDriver.init(index, config, utils);
+            }
+        })
         .catch(() => { index = []; });
 
     function normalize(value) {
-        return String(value || '').toLowerCase().replace(/[^a-z0-9\s-]/g, ' ').replace(/\s+/g, ' ').trim();
+        return String(value || '').toLowerCase().replace(/[^a-z0-9._-]/g, ' ').replace(/\s+/g, ' ').trim();
     }
 
     function escapeHtml(value) {
@@ -276,20 +425,91 @@
 
     function highlighted(value, query) {
         let html = escapeHtml(value);
-        const terms = normalize(query).split(' ').filter((term) => term.length > 1);
+        const normalizedQuery = normalize(query);
+        const terms = normalizedQuery.split(' ').filter((term) => term.length > 1);
 
-        terms.forEach((term) => {
-            const pattern = new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'ig');
-            html = html.replace(pattern, '<mark>$1</mark>');
-        });
+        const rawQuery = query.trim().toLowerCase();
+        if (rawQuery.length > 1) {
+            terms.unshift(rawQuery);
+        }
 
-        return html;
+        if (terms.length === 0) return html;
+
+        // Sort terms by length descending to match longest possible terms first
+        terms.sort((a, b) => b.length - a.length);
+
+        const pattern = new RegExp(`(${terms.map((term) => term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'ig');
+
+        return html.replace(pattern, '<mark>$1</mark>');
     }
 
-    function previewFor(entry) {
-        const preview = entry.excerpt || entry.content || '';
+    function previewFor(entry, query) {
+        const content = entry.content || entry.excerpt || '';
 
-        return preview.length > 220 ? `${preview.slice(0, 220)}...` : preview;
+        if (!query || !content) {
+            return content.length > 220 ? `${content.slice(0, 220)}...` : content;
+        }
+
+        const normalizedContent = String(content).toLowerCase().replace(/[^a-z0-9._-]/g, ' ');
+        const terms = normalize(query).split(' ').filter((term) => term.length > 1);
+
+        const rawQuery = query.trim().toLowerCase();
+        if (rawQuery.length > 1) {
+            terms.unshift(rawQuery);
+        }
+
+        if (terms.length === 0) {
+            return content.length > 220 ? `${content.slice(0, 220)}...` : content;
+        }
+
+        // Use the longest term as it is usually the most specific
+        const sortedTerms = [...terms].sort((a, b) => b.length - a.length);
+        let bestIndex = -1;
+
+        for (const term of sortedTerms) {
+            const pattern = new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+'), 'i');
+            const match = normalizedContent.match(pattern);
+            if (match) {
+                bestIndex = match.index;
+                break;
+            }
+        }
+
+        if (bestIndex === -1) {
+            return content.length > 220 ? `${content.slice(0, 220)}...` : content;
+        }
+
+        // Create a snippet window around the best match
+        let start = Math.max(0, bestIndex - 80);
+        let end = Math.min(content.length, bestIndex + 140);
+
+        // Adjust start to the beginning of a word if possible, without losing the match
+        if (start > 0) {
+            const spaceIndex = content.indexOf(' ', start);
+            if (spaceIndex !== -1 && spaceIndex < bestIndex) {
+                start = spaceIndex + 1;
+            }
+        }
+
+        // Adjust end to the end of a word if possible
+        if (end < content.length) {
+            const spaceIndex = content.lastIndexOf(' ', end);
+            if (spaceIndex !== -1 && spaceIndex > bestIndex) {
+                end = spaceIndex;
+            }
+        }
+
+        let snippet = content.slice(start, end).trim();
+
+        if (start > 0) {
+            snippet = '...' + snippet;
+        }
+
+        if (end < content.length) {
+            snippet = snippet + '...';
+        }
+
+        return snippet;
     }
 
     function hideResults() {
@@ -297,24 +517,63 @@
         results.innerHTML = '';
     }
 
-    search.addEventListener('input', () => {
+    function activeResult() {
+        return results.querySelector('.inkstone-search-result.is-active');
+    }
+
+    function setActiveResult(next) {
+        results.querySelectorAll('.inkstone-search-result').forEach((result) => {
+            result.classList.toggle('is-active', result === next);
+            result.setAttribute('aria-selected', result === next ? 'true' : 'false');
+        });
+    }
+
+    function moveActiveResult(direction) {
+        const items = Array.from(results.querySelectorAll('.inkstone-search-result'));
+
+        if (items.length === 0) {
+            return;
+        }
+
+        const current = activeResult();
+        const currentIndex = current ? items.indexOf(current) : -1;
+        const nextIndex = currentIndex === -1
+            ? (direction > 0 ? 0 : items.length - 1)
+            : (currentIndex + direction + items.length) % items.length;
+
+        setActiveResult(items[nextIndex]);
+        items[nextIndex].scrollIntoView({ block: 'nearest' });
+    }
+
+    search.addEventListener('input', async () => {
         const query = search.value.trim();
         results.innerHTML = '';
+        search.setAttribute('aria-expanded', 'false');
 
         if (query.length < 2) {
             hideResults();
             return;
         }
 
-        const matches = index
-            .map((entry) => ({ entry, score: scoreEntry(entry, query) }))
-            .filter((match) => match.score > 0)
-            .sort((left, right) => right.score - left.score)
-            .slice(0, 8);
+        let matches = [];
+
+        if (window.InkstoneSearchDriver && typeof window.InkstoneSearchDriver.search === 'function') {
+            matches = await window.InkstoneSearchDriver.search(query, index, config, utils);
+        }
+
+        if (matches.length === 0) {
+            matches = index
+                .map((entry) => ({ entry, score: scoreEntry(entry, query) }))
+                .filter((match) => match.score > 0)
+                .sort((left, right) => right.score - left.score);
+        }
+
+        matches = matches.slice(0, 8);
 
         if (matches.length === 0) {
             results.innerHTML = '<div class="inkstone-search-empty">No results found.</div>';
             results.hidden = false;
+            search.setAttribute('aria-expanded', 'true');
             return;
         }
 
@@ -322,23 +581,45 @@
             const link = document.createElement('a');
             link.className = 'inkstone-search-result';
             link.href = entry.url;
-            link.innerHTML = `<strong>${highlighted(entry.title, query)}</strong><span>${highlighted(previewFor(entry), query)}</span>`;
+            link.setAttribute('role', 'option');
+            link.setAttribute('aria-selected', 'false');
+
+            const driverPreview = (window.InkstoneSearchDriver && typeof window.InkstoneSearchDriver.preview === 'function')
+                ? window.InkstoneSearchDriver.preview(entry, query, utils)
+                : previewFor(entry, query);
+
+            const driverHighlight = (window.InkstoneSearchDriver && typeof window.InkstoneSearchDriver.highlight === 'function')
+                ? (text) => window.InkstoneSearchDriver.highlight(text, query, utils)
+                : (text) => highlighted(text, query);
+
+            const sectionHtml = entry.section ? `<span class="inkstone-search-result-section">${escapeHtml(entry.section)}</span>` : '';
+            link.innerHTML = `${sectionHtml}<strong>${driverHighlight(entry.title)}</strong><span>${driverHighlight(driverPreview)}</span>`;
             results.appendChild(link);
         });
 
+        results.setAttribute('role', 'listbox');
         results.hidden = false;
+        search.setAttribute('aria-expanded', 'true');
     });
 
     search.addEventListener('keydown', (event) => {
         if (event.key === 'Escape') {
-            search.blur();
-            hideResults();
+            closeSearch();
+        } else if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            moveActiveResult(1);
+        } else if (event.key === 'ArrowUp') {
+            event.preventDefault();
+            moveActiveResult(-1);
+        } else if (event.key === 'Enter' && activeResult()) {
+            event.preventDefault();
+            activeResult().click();
         }
     });
 
     document.addEventListener('click', (event) => {
-        if (!results.contains(event.target) && event.target !== search) {
-            hideResults();
+        if (searchOverlay && event.target === searchOverlay) {
+            closeSearch();
         }
     });
 })();

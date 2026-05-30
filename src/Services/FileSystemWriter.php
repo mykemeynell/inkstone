@@ -58,6 +58,33 @@ final class FileSystemWriter
         $this->filesystem->copy($source, $target, true);
     }
 
+    public function copyBuiltAssets(string $sourceRoot, string $outputRoot): void
+    {
+        if (! is_dir($sourceRoot)) {
+            return;
+        }
+
+        $sourceRoot = rtrim($sourceRoot, DIRECTORY_SEPARATOR);
+        $outputRoot = rtrim($outputRoot, DIRECTORY_SEPARATOR);
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($sourceRoot, \FilesystemIterator::SKIP_DOTS),
+        );
+
+        foreach ($iterator as $file) {
+            if (! $file instanceof \SplFileInfo || ! $file->isFile()) {
+                continue;
+            }
+
+            $relative = substr($file->getPathname(), strlen($sourceRoot) + 1);
+
+            if (str_starts_with($relative, '.vite'.DIRECTORY_SEPARATOR)) {
+                continue;
+            }
+
+            $this->copyFile($file->getPathname(), $outputRoot.DIRECTORY_SEPARATOR.$relative);
+        }
+    }
+
     /**
      * @param  list<string>  $paths
      */
