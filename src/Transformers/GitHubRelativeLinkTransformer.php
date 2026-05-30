@@ -76,7 +76,7 @@ final class GitHubRelativeLinkTransformer implements Transformer
     private function rawUrlFor(string $target, Document $document): string
     {
         $parts = parse_url($target);
-        $path = (string) ($parts['path'] ?? '');
+        $path = $this->normalizeTargetPath((string) ($parts['path'] ?? ''));
         $suffix = '';
 
         if (isset($parts['query'])) {
@@ -93,10 +93,26 @@ final class GitHubRelativeLinkTransformer implements Transformer
         return sprintf(
             'https://raw.githubusercontent.com/%s/%s/%s%s',
             $this->repositoryPath(),
-            trim((string) ($this->config['branch'] ?? 'main'), '/'),
+            $this->ref(),
             $resolved,
             $suffix,
         );
+    }
+
+    private function normalizeTargetPath(string $path): string
+    {
+        if ($path === '' || $path === '.' || str_ends_with($path, '/')) {
+            return rtrim($path, '/').'/README.md';
+        }
+
+        return $path;
+    }
+
+    private function ref(): string
+    {
+        $ref = $this->config['ref'] ?? $this->config['tag'] ?? $this->config['branch'] ?? 'main';
+
+        return trim((string) $ref, '/');
     }
 
     private function repositoryPath(): ?string
@@ -107,7 +123,7 @@ final class GitHubRelativeLinkTransformer implements Transformer
             return null;
         }
 
-        if (preg_match('/github\.com[:\/](?<path>[^\/]+\/[^\/\.]+)(?:\.git)?/i', $repository, $matches)) {
+        if (preg_match('/github\.com[:\/](?<path>[^\/]+\/[^\/]+?)(?:\.git)?(?:$|[?#])/i', $repository, $matches)) {
             return trim($matches['path'], '/');
         }
 

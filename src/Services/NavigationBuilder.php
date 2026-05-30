@@ -19,7 +19,7 @@ final class NavigationBuilder implements NavigationBuilderContract
             $this->insert($tree, $segments, $document);
         }
 
-        return $this->sortItems($this->itemsFromNodes($tree, $activeDocument));
+        return $this->sortItems($this->itemsFromNodes($tree, $activeDocument, null));
     }
 
     /**
@@ -54,7 +54,7 @@ final class NavigationBuilder implements NavigationBuilderContract
      * @param  array<string, array{segment: string, document: Document|null, children: array<string, mixed>}>  $nodes
      * @return list<NavigationItem>
      */
-    private function itemsFromNodes(array $nodes, ?Document $activeDocument): array
+    private function itemsFromNodes(array $nodes, ?Document $activeDocument, ?string $parentTitle = null): array
     {
         $items = [];
 
@@ -62,7 +62,10 @@ final class NavigationBuilder implements NavigationBuilderContract
             $document = $node['document'];
             /** @var array<string, array{segment: string, document: Document|null, children: array<string, mixed>}> $childrenNodes */
             $childrenNodes = $node['children'];
-            $children = $this->sortItems($this->itemsFromNodes($childrenNodes, $activeDocument));
+
+            $title = $document instanceof Document ? $document->title() : $this->titleFromSegment($node['segment']);
+
+            $children = $this->sortItems($this->itemsFromNodes($childrenNodes, $activeDocument, $title));
             $documentIsActive = $document instanceof Document && $activeDocument?->sourcePath === $document->sourcePath;
 
             if ($children !== [] && $document instanceof Document) {
@@ -73,17 +76,23 @@ final class NavigationBuilder implements NavigationBuilderContract
                     order: PHP_INT_MIN,
                     sourcePath: $document->sourcePath,
                     headings: $document->headings,
+                    slug: '',
+                    group: $title,
                 ));
             }
 
+            $slug = $document instanceof Document ? $document->slug : $node['segment'];
+
             $items[] = new NavigationItem(
-                title: $document instanceof Document ? $document->title() : $this->titleFromSegment($node['segment']),
+                title: $title,
                 url: $children === [] && $document instanceof Document ? $document->url : '#',
                 children: $children,
                 active: $documentIsActive || $this->hasActiveChild($children),
                 order: $document instanceof Document ? $document->order() : PHP_INT_MAX,
                 sourcePath: $document instanceof Document ? $document->sourcePath : null,
                 headings: $document instanceof Document ? $document->headings : [],
+                slug: $slug,
+                group: $parentTitle,
             );
         }
 

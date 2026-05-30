@@ -138,15 +138,15 @@ final class SyntaxHighlightTransformer implements Transformer
 
     private function phikiTheme(): string|array|Theme
     {
-        $configured = $this->config['code_block_theme'] ?? null;
+        $configured = $this->config['theme'] ?? null;
 
         if (is_string($configured) || $configured instanceof Theme || $this->isThemeMap($configured)) {
             return $configured;
         }
 
         return [
-            'light' => $this->themeFromString((string) ($this->config['theme_light'] ?? 'github-light')),
-            'dark' => $this->themeFromString((string) ($this->config['theme_dark'] ?? 'github-dark')),
+            'light' => Theme::GithubLight,
+            'dark' => Theme::GithubDark,
         ];
     }
 

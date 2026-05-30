@@ -109,3 +109,22 @@ docs/configuration/github.md -> /configuration/github
 ```
 
 When pretty URLs are enabled, these are written as `index.html` files in matching directories.
+
+## Collapsible Sections
+
+Sidebar parent sections can be collapsed. The initial state is configured with `navigation.expanded`:
+
+```php
+'navigation' => [
+    'expanded' => [], // default: only the active section
+],
+```
+
+| Value | Behavior |
+|---|---|
+| `true` | All sections start expanded |
+| `false` | All sections start collapsed (active section still expands) |
+| `[]` | Only the active section starts expanded |
+| `['getting-started', 'features']` | Only the listed slugs start expanded |
+
+The active section always remains expanded regardless of configuration. Collapse state is persisted in the browser across page loads.

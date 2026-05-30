@@ -16,6 +16,7 @@
     --inkstone-focus: rgb(21 128 61 / 15%);
     --inkstone-wash: rgb(21 128 61 / 8%);
     --inkstone-nav-active: #ecfdf3;
+    --inkstone-nav-parent-text: var(--inkstone-accent);
     --inkstone-code-bg: #f6faf7;
     --inkstone-code-bar: #edf7ef;
     --inkstone-code-text: #1d2b23;
@@ -28,6 +29,10 @@
     --inkstone-copy-bg: rgb(255 255 255 / 84%);
     --inkstone-mark: rgb(132 204 22 / 34%);
     --inkstone-scrollbar: #b8cbbb;
+    --inkstone-kbd-bg: #edf7ef;
+    --inkstone-kbd-border: #b8cbbb;
+    --inkstone-kbd-text: #627064;
+    --inkstone-glass-shadow: 0 5px 8px #00000012,0 10px 10px #0000000e,0 16px 12px #00000008,0 26px 14px #00000003,0 0 0 3px #15803d0d,0 0 0 2px #fff,0 0 0 1px #15803d0d;
     --inkstone-font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     --inkstone-font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
     --inkstone-control-shadow: 0 1px 2px rgb(16 32 25 / 5%);
@@ -54,6 +59,7 @@
     --inkstone-focus: rgb(134 239 172 / 16%);
     --inkstone-wash: rgb(134 239 172 / 8%);
     --inkstone-nav-active: #172419;
+    --inkstone-nav-parent-text: #86efac;
     --inkstone-code-bg: #0c120e;
     --inkstone-code-bar: #111a14;
     --inkstone-code-text: #e5f4e8;
@@ -66,6 +72,15 @@
     --inkstone-copy-bg: rgb(17 26 20 / 84%);
     --inkstone-mark: rgb(132 204 22 / 22%);
     --inkstone-scrollbar: #405746;
+    --inkstone-kbd-bg: #1b2a1f;
+    --inkstone-kbd-border: #405746;
+    --inkstone-kbd-text: #9aab9e;
+    --inkstone-glass-shadow: 0 5px 8px #00000026,0 10px 10px #00000021,0 16px 12px #00000018,0 26px 14px #0000000d,0 0 0 3px #86efac1a,0 0 0 2px #ffffff1a,0 0 0 1px #86efac1a;
+    --phiki-dark-background-color: var(--inkstone-code-bg);
+    --phiki-dark-color: var(--inkstone-code-text);
+    --phiki-dark-font-style: inherit;
+    --phiki-dark-font-weight: inherit;
+    --phiki-dark-text-decoration: inherit;
     --inkstone-control-shadow: 0 1px 2px rgb(0 0 0 / 30%);
     --inkstone-panel-shadow: 0 20px 60px rgb(0 0 0 / 30%);
     --inkstone-code-shadow: 0 16px 42px rgb(0 0 0 / 20%);

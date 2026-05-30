@@ -84,12 +84,33 @@ Inkstone copies package CSS and JavaScript assets into:
 build/docs/assets
 ```
 
+When `build.asset_hashing` is enabled and a Vite manifest exists, generated pages reference the hashed files from the manifest instead of the source asset names. Inkstone copies the public build output into `build/docs` and does not publish the private `.vite/manifest.json` file.
+
+The package build uses:
+
+```bash
+npm run build
+```
+
+By default this writes production assets to `resources/dist`. If you publish or customize the asset build, point Inkstone at your generated files:
+
+```php
+'build' => [
+    'assets' => [
+        'dist_path' => base_path('resources/dist'),
+        'manifest_path' => base_path('resources/dist/.vite/manifest.json'),
+    ],
+],
+```
+
 Additional asset directories are configured with:
 
 ```php
-'assets' => [
-    'additional_paths' => [
-        resource_path('docs-assets'),
+'build' => [
+    'assets' => [
+        'additional_paths' => [
+            resource_path('docs-assets'),
+        ],
     ],
 ],
 ```

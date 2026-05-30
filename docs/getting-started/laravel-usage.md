@@ -44,13 +44,12 @@ config/inkstone.php
 
 The most common keys are:
 
-- `docs_path`
+- `source_path`
 - `output_path`
 - `site`
 - `theme`
 - `github`
 - `search`
-- `syntax_highlighting`
 - `demos`
 
 ## Build Static Documentation

@@ -88,7 +88,7 @@ Specify a filename using `filename`, `file`, or `title`:
 ````markdown
 ```php filename="config/inkstone.php"
 return [
-    'docs_path' => 'docs',
+    'source_path' => 'docs',
 ];
 ```
 ````
@@ -97,7 +97,7 @@ Rendered result:
 
 ```php filename="config/inkstone.php"
 return [
-    'docs_path' => 'docs',
+    'source_path' => 'docs',
 ];
 ```
 
@@ -127,7 +127,9 @@ Or use the `highlight` attribute:
 Code blocks include a copy button by default. Disable it with:
 
 ```php
-'syntax_highlighting' => [
-    'copy_button' => false,
+'theme' => [
+    'syntax_highlighting' => [
+        'copy_button' => false,
+    ],
 ],
 ```

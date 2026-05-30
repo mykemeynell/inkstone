@@ -34,7 +34,7 @@ vendor/bin/inkstone docs:build --config=inkstone.php
 <?php
 
 return [
-    'docs_path' => __DIR__.'/docs',
+    'source_path' => __DIR__.'/docs',
     'output_path' => __DIR__.'/build/docs',
     'site' => [
         'title' => 'My Documentation',
@@ -48,10 +48,10 @@ return [
 
 ## Source And Output
 
-`docs_path` is the Markdown source directory:
+`source_path` is the Markdown source directory:
 
 ```php
-'docs_path' => base_path('docs'),
+'source_path' => base_path('docs'),
 ```
 
 `output_path` is the generated static site directory:
@@ -63,7 +63,7 @@ return [
 In standalone config files, prefer `__DIR__`:
 
 ```php
-'docs_path' => __DIR__.'/docs',
+'source_path' => __DIR__.'/docs',
 'output_path' => __DIR__.'/build/docs',
 ```
 
@@ -75,11 +75,14 @@ In standalone config files, prefer `__DIR__`:
     'description' => 'Documentation for a Laravel package.',
     'base_url' => '',
     'favicon' => null,
-    'logo' => null,
+    'logo' => [
+        'light' => null,
+        'dark' => null,
+    ],
 ],
 ```
 
-If `favicon` or `logo` are `null`, Inkstone looks for source-level assets:
+If `favicon` or `logo` are `null`, Inkstone looks for source-level assets. `logo` accepts a string or an array with `light` and `dark` keys for separate logo variants per theme mode.
 
 ```text
 docs/favicon.ico
@@ -100,13 +103,11 @@ Discovered files are copied into the generated output and linked from the theme.
 'theme' => [
     'name' => 'default',
     'layout' => 'default',
-    'available' => ['default', 'light', 'dark', 'ember', 'forest'],
-    'dark_mode' => true,
     'default_mode' => 'system',
 ],
 ```
 
-`theme.name` selects the CSS variant. `theme.layout` selects the Blade layout, so bundled variants such as `ember` and `forest` can use the default layout.
+`theme.name` selects the CSS variant. `theme.layout` selects the Blade layout, so bundled variants such as `ember` and `forest` can use the default layout. `theme.default_mode` sets the initial color mode (`system`, `light`, or `dark`).
 
 ## Build Settings
 
@@ -116,7 +117,6 @@ Discovered files are copied into the generated output and linked from the theme.
     'pretty_urls' => true,
     'generate_sitemap' => true,
     'generate_robots_txt' => true,
-    'minify_html' => false,
     'asset_hashing' => true,
 ],
 ```
@@ -130,16 +130,16 @@ build/docs/installation/index.html
 ## Asset Settings
 
 ```php
-'assets' => [
-    'copy_images' => true,
-    'copy_static_assets' => true,
-    'additional_paths' => [
-        resource_path('docs-assets'),
+'build' => [
+    'assets' => [
+        'additional_paths' => [
+            resource_path('docs-assets'),
+        ],
     ],
 ],
 ```
 
-Additional asset directories are copied into `build/docs/assets`.
+Additional asset directories are copied into `build/docs/assets`. Source-level image files are always copied during the build.
 
 ## Transformers
 

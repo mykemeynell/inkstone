@@ -22,7 +22,6 @@ collect(['Laravel', 'Docs', 'Inkstone'])
 ````
 
 Rendered result:
-
 ```demo:php
 collect(['Laravel', 'Docs', 'Inkstone'])
     ->map(fn ($item) => strtoupper($item))
@@ -121,6 +120,32 @@ Arrays and collections are rendered as formatted JSON code blocks.
     ],
 ],
 ```
+
+## Stack Traces
+
+When `demos.show_stack_traces` is enabled, demo exceptions render a collapsible stack trace:
+
+```php
+'demos' => [
+    'show_stack_traces' => true,
+],
+```
+
+## Disposable Database
+
+When `demos.use_disposable_database` is enabled, each PHP demo receives a fresh in-memory SQLite database:
+
+```php
+'demos' => [
+    'use_disposable_database' => true,
+    'database' => [
+        'connection' => 'inkstone_demo',
+        'database' => ':memory:',
+    ],
+],
+```
+
+The database is created before each demo and destroyed after execution.
 
 Inkstone blocks obvious unsafe PHP functions such as process execution and filesystem writes.
 

@@ -1,5 +1,6 @@
 .idea
 vendor
+node_modules
 coverage
 .output.txt
 .phpunit.cache
@@ -9,3 +10,4 @@ composer.lock
 phpstan-baseline.neon
 .php-cs-fixer.cache
 /build/docs
+/resources/dist

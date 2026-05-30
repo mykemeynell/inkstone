@@ -18,6 +18,8 @@ final class NavigationItem
         public readonly int $order = PHP_INT_MAX,
         public readonly ?string $sourcePath = null,
         public readonly array $headings = [],
+        public readonly string $slug = '',
+        public readonly ?string $group = null,
     ) {}
 
     /**
@@ -35,6 +37,7 @@ final class NavigationItem
                 static fn (Heading $heading): array => $heading->toArray(),
                 $this->headings,
             ),
+            'group' => $this->group,
             'children' => array_map(
                 static fn (NavigationItem $item): array => $item->toArray(),
                 $this->children,

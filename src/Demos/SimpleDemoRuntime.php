@@ -20,19 +20,22 @@ final class SimpleDemoRuntime implements DemoRuntime
      */
     public function __construct(
         private readonly array $config = [],
+        private readonly ?DemoRuntimeResolver $resolver = null,
     ) {}
 
     public function run(DemoBlock $block): DemoResult
     {
-        if ($block->language === 'markdown' || $block->language === 'md') {
+        $runtime = ($this->resolver ?? new DemoRuntimeResolver($this->config))->resolve($block->language);
+
+        if ($runtime === 'markdown') {
             return new DemoResult($block, true, value: $this->htmlString($this->renderMarkdown($block->code)));
         }
 
-        if ($block->language === 'html') {
+        if ($runtime === 'html') {
             return new DemoResult($block, true, value: $this->htmlString($block->code));
         }
 
-        if ($block->language === 'blade') {
+        if ($runtime === 'blade') {
             try {
                 return new DemoResult($block, true, value: $this->renderBlade($block->code));
             } catch (Throwable $throwable) {
@@ -46,13 +49,14 @@ final class SimpleDemoRuntime implements DemoRuntime
             }
         }
 
-        if ($block->language !== 'php') {
-            return new DemoResult($block, true, value: null);
+        if ($runtime !== 'php') {
+            return new DemoResult($block, true, value: $this->htmlString('<pre><code class="language-'.e($block->language).'">'.e($block->code).'</code></pre>'));
         }
 
         $this->assertSandboxAllows($block->code);
 
         $previousMemoryLimit = ini_get('memory_limit');
+        $databaseState = $this->prepareDisposableDatabase();
         $timeout = (int) data_get($this->config, 'sandbox.timeout', 5);
         $memoryLimit = (string) data_get($this->config, 'sandbox.memory_limit', '128M');
 
@@ -92,6 +96,7 @@ final class SimpleDemoRuntime implements DemoRuntime
             return new DemoResult($block, $expected, exception: $throwable, expectedException: $expected);
         } finally {
             ini_set('memory_limit', $previousMemoryLimit);
+            $this->restoreDisposableDatabase($databaseState);
         }
     }
 
@@ -156,6 +161,7 @@ final class SimpleDemoRuntime implements DemoRuntime
     {
         return ! str_contains($code, 'return ')
             && ! str_contains($code, 'echo ')
+            && ! preg_match('/^\s*(if|for|foreach|while|do|switch|try)\b/i', $code)
             && substr_count($code, ';') <= 1;
     }
 
@@ -165,24 +171,102 @@ final class SimpleDemoRuntime implements DemoRuntime
             return;
         }
 
-        $disallowed = [
-            'exec',
-            'passthru',
-            'proc_open',
-            'shell_exec',
-            'system',
-            'file_put_contents',
-            'fopen',
-            'unlink',
-            'rmdir',
-            'mkdir',
-        ];
+        $disallowed = [];
+
+        if (! (bool) data_get($this->config, 'sandbox.allow_process_execution', false)) {
+            $disallowed = array_merge($disallowed, [
+                'exec',
+                'passthru',
+                'pcntl_exec',
+                'popen',
+                'proc_open',
+                'shell_exec',
+                'system',
+            ]);
+        }
+
+        if (! (bool) data_get($this->config, 'sandbox.allow_filesystem_writes', false)) {
+            $disallowed = array_merge($disallowed, [
+                'copy',
+                'file_put_contents',
+                'fopen',
+                'mkdir',
+                'rename',
+                'rmdir',
+                'symlink',
+                'unlink',
+            ]);
+        }
 
         foreach ($disallowed as $function) {
             if (preg_match('/\b'.preg_quote($function, '/').'\s*\(/i', $code)) {
                 throw new RuntimeException("Demo uses disallowed function [{$function}].");
             }
         }
+    }
+
+    /**
+     * @return array{enabled: bool, connection: string, previous_default: mixed, previous_connection: mixed}
+     */
+    private function prepareDisposableDatabase(): array
+    {
+        $state = [
+            'enabled' => false,
+            'connection' => (string) data_get($this->config, 'database.connection', 'inkstone_demo'),
+            'previous_default' => null,
+            'previous_connection' => null,
+        ];
+
+        if (! (bool) data_get($this->config, 'use_disposable_database', false) || ! function_exists('config')) {
+            return $state;
+        }
+
+        $connection = $state['connection'];
+        $state['enabled'] = true;
+        $state['previous_default'] = config('database.default');
+        $state['previous_connection'] = config("database.connections.{$connection}");
+
+        config()->set('database.default', $connection);
+        config()->set("database.connections.{$connection}", [
+            'driver' => 'sqlite',
+            'database' => (string) data_get($this->config, 'database.database', ':memory:'),
+            'prefix' => '',
+            'foreign_key_constraints' => true,
+        ]);
+
+        if (function_exists('app') && app()->bound('db')) {
+            app('db')->purge($connection);
+            app('db')->reconnect($connection);
+        }
+
+        return $state;
+    }
+
+    /**
+     * @param  array{enabled: bool, connection: string, previous_default: mixed, previous_connection: mixed}  $state
+     */
+    private function restoreDisposableDatabase(array $state): void
+    {
+        if (! $state['enabled'] || ! function_exists('config')) {
+            return;
+        }
+
+        $connection = $state['connection'];
+
+        if (function_exists('app') && app()->bound('db')) {
+            app('db')->disconnect($connection);
+            app('db')->purge($connection);
+        }
+
+        config()->set('database.default', $state['previous_default']);
+
+        if ($state['previous_connection'] === null) {
+            config()->offsetUnset("database.connections.{$connection}");
+
+            return;
+        }
+
+        config()->set("database.connections.{$connection}", $state['previous_connection']);
     }
 
     private function isExpected(DemoBlock $block, Throwable $throwable): bool

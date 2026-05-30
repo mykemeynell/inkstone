@@ -11,7 +11,9 @@ use Inkstone\Contracts\NavigationBuilder;
 use Inkstone\Contracts\SearchIndexer;
 use Inkstone\Contracts\StaticSiteGenerator;
 use Inkstone\DTOs\Document;
+use Inkstone\DTOs\NavigationItem;
 use Inkstone\Pipelines\TransformerPipeline;
+use Inkstone\Services\AssetManifest;
 use Inkstone\Services\FileSystemWriter;
 use Inkstone\Support\UrlBuilder;
 
@@ -25,6 +27,7 @@ final class StaticDocumentationGenerator implements StaticSiteGenerator
         private readonly DocumentRenderer $renderer,
         private readonly SearchIndexer $search,
         private readonly FileSystemWriter $writer,
+        private readonly AssetManifest $assets,
     ) {}
 
     public function build(): array
@@ -47,6 +50,9 @@ final class StaticDocumentationGenerator implements StaticSiteGenerator
 
         $pages = [];
 
+        $navigationTree = $this->navigation->build($documents, null);
+        $sectionMap = $this->buildSectionMap($navigationTree);
+
         foreach ($documents as $document) {
             $navigation = $this->navigation->build($documents, $document);
             $path = $this->writer->outputPathFor($document, $outputPath, $prettyUrls);
@@ -55,7 +61,7 @@ final class StaticDocumentationGenerator implements StaticSiteGenerator
             $pages[] = $page;
         }
 
-        $this->writeSearchIndex($documents, $outputPath);
+        $this->writeSearchIndex($documents, $outputPath, $sectionMap);
         $this->writeStaticMetadata($documents, $outputPath);
         $this->copyAssets($outputPath);
 
@@ -64,23 +70,38 @@ final class StaticDocumentationGenerator implements StaticSiteGenerator
 
     /**
      * @param  list<Document>  $documents
+     * @param  array<string, string>  $sections  url => section name
      */
-    private function writeSearchIndex(array $documents, string $outputPath): void
+    private function writeSearchIndex(array $documents, string $outputPath, array $sections = []): void
     {
         if (! (bool) config('inkstone.search.enabled', true)) {
             return;
         }
 
-        $entries = array_map(
-            static fn ($entry): array => $entry->toArray(),
-            $this->search->index($documents),
-        );
+        $index = $this->search->index($documents, $sections);
 
-        $indexPath = trim((string) config('inkstone.search.index_path', 'search-index.json'), '/');
-        $this->writer->write(
-            rtrim($outputPath, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.$indexPath,
-            json_encode($entries, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) ?: '[]',
-        );
+        $this->search->save($index, $outputPath);
+    }
+
+    /**
+     * @param  list<NavigationItem>  $navigation
+     * @return array<string, string>
+     */
+    private function buildSectionMap(array $navigation): array
+    {
+        $map = [];
+
+        foreach ($navigation as $item) {
+            if ($item->group !== null) {
+                $map[$item->url] = $item->group;
+            }
+
+            if ($item->children !== []) {
+                $map += $this->buildSectionMap($item->children);
+            }
+        }
+
+        return $map;
     }
 
     /**
@@ -101,23 +122,36 @@ final class StaticDocumentationGenerator implements StaticSiteGenerator
 
     private function copyAssets(string $outputPath): void
     {
-        $paths = [
-            __DIR__.'/../../resources/css',
-            __DIR__.'/../../resources/js',
-        ];
+        if ($this->assets->enabled()) {
+            $this->writer->copyBuiltAssets($this->assets->distPath(), $outputPath);
+            $paths = [];
+        } else {
+            $paths = [
+                __DIR__.'/../../resources/css',
+                __DIR__.'/../../resources/js',
+            ];
+        }
 
-        foreach ((array) config('inkstone.assets.additional_paths', []) as $path) {
+        foreach ((array) config('inkstone.build.assets.additional_paths', []) as $path) {
             if (is_string($path)) {
                 $paths[] = $path;
             }
         }
 
         $this->writer->copyAssets($paths, $outputPath.'/assets');
+
+        if ((bool) config('inkstone.search.enabled', true)) {
+            $searchDriver = (string) config('inkstone.search.driver', 'json');
+            $this->writer->copyFile(
+                __DIR__.'/../../resources/js/search-drivers/'.$searchDriver.'.js',
+                $outputPath.'/assets/js/search-driver.js'
+            );
+        }
     }
 
     private function discoverSourceBrandAssets(string $outputPath): void
     {
-        $sourcePath = (string) config('inkstone.docs_path');
+        $sourcePath = (string) config('inkstone.source_path');
 
         if (! is_dir($sourcePath)) {
             return;
@@ -133,15 +167,57 @@ final class StaticDocumentationGenerator implements StaticSiteGenerator
             }
         }
 
-        if (! is_string(config('inkstone.site.logo')) || config('inkstone.site.logo') === '') {
-            $logo = $this->firstExisting($sourcePath, ['logo.svg', 'logo.png', 'logo.jpg', 'logo.jpeg', 'logo.webp']);
+        $this->discoverLogos($sourcePath, $outputPath);
+    }
 
-            if ($logo !== null) {
-                $target = 'assets/'.basename($logo);
-                $this->writer->copyFile($logo, rtrim($outputPath, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $target));
-                config()->set('inkstone.site.logo', $this->assetUrl($target));
-            }
+    private function discoverLogos(string $sourcePath, string $outputPath): void
+    {
+        $logo = config('inkstone.site.logo');
+        $alreadyConfigured = is_string($logo)
+            || (is_array($logo) && ($logo['light'] !== null || $logo['dark'] !== null));
+
+        $extensions = ['svg', 'png', 'jpg', 'jpeg', 'webp'];
+
+        $lightFile = $this->firstExistingByExtensions($sourcePath, 'logo', $extensions);
+        $darkFile = $this->firstExistingByExtensions($sourcePath, 'logo-dark', $extensions);
+
+        $lightUrl = null;
+        $darkUrl = null;
+
+        if ($lightFile !== null) {
+            $target = 'assets/'.basename($lightFile);
+            $this->writer->copyFile($lightFile, rtrim($outputPath, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $target));
+            $lightUrl = $this->assetUrl($target);
         }
+
+        if ($darkFile !== null) {
+            $target = 'assets/'.basename($darkFile);
+            $this->writer->copyFile($darkFile, rtrim($outputPath, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $target));
+            $darkUrl = $this->assetUrl($target);
+        }
+
+        // Dark falls back to light when no dark-specific file exists
+        if ($darkUrl === null) {
+            $darkUrl = $lightUrl;
+        }
+
+        if (! $alreadyConfigured) {
+            config()->set('inkstone.site.logo', [
+                'light' => $lightUrl,
+                'dark' => $darkUrl,
+            ]);
+        }
+    }
+
+    /**
+     * @param  list<string>  $extensions
+     */
+    private function firstExistingByExtensions(string $directory, string $basename, array $extensions): ?string
+    {
+        return $this->firstExisting(
+            $directory,
+            array_map(static fn (string $ext): string => $basename.'.'.$ext, $extensions),
+        );
     }
 
     /**

@@ -48,3 +48,4 @@ Open or serve `build/docs` to preview the generated site.
 - [Installation](/getting-started/installation)
 - [Standalone Usage](/getting-started/standalone-usage)
 - [Laravel Usage](/getting-started/laravel-usage)
+- [Package Author Workflow](/getting-started/package-author-workflow)

@@ -54,7 +54,7 @@ Create `inkstone.php` in the package root:
 <?php
 
 return [
-    'docs_path' => __DIR__.'/docs',
+    'source_path' => __DIR__.'/docs',
     'output_path' => __DIR__.'/build/docs',
     'site' => [
         'title' => 'Package Documentation',

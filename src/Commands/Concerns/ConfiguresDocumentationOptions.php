@@ -27,7 +27,7 @@ trait ConfiguresDocumentationOptions
         $source = $this->documentationOption('source');
 
         if (is_string($source) && $source !== '') {
-            config()->set('inkstone.docs_path', $this->absolutePath($source));
+            config()->set('inkstone.source_path', $this->absolutePath($source));
         }
 
         $output = $this->documentationOption('output');

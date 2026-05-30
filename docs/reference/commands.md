@@ -77,7 +77,7 @@ Options:
 | `--config` | Optional Inkstone config file |
 | `--host` | Local server host |
 | `--port` | Local server port |
-| `--watch` | Rebuild before serving |
+| `--watch` | Rebuild before serving, then watch docs, config, theme views, and configured assets for changes |
 
 `docs:serve` is for local preview only.
 
