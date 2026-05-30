@@ -51,7 +51,7 @@ For standalone package repositories, the core steps are:
     path: build/docs
 ```
 
-If GitHub Pages serves the site below a repository path such as `/my-package`, set `DOCS_BASE_URL=/my-package` or pass `--base-url=/my-package` during the build.
+If GitHub Pages serves the site below a repository path such as `/my-package`, set `INKSTONE_BASE_URL=/my-package` or pass `--base-url=/my-package` during the build.
 
 ## Netlify
 
