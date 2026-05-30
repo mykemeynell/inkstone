@@ -150,17 +150,6 @@ final class SyntaxHighlightTransformer implements Transformer
         ];
     }
 
-    private function themeFromString(string $theme): string|Theme
-    {
-        foreach (Theme::cases() as $case) {
-            if ($case->value === $theme) {
-                return $case;
-            }
-        }
-
-        return $theme;
-    }
-
     private function isThemeMap(mixed $value): bool
     {
         if (! is_array($value) || $value === []) {
