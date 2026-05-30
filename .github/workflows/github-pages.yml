@@ -33,8 +33,8 @@ jobs:
       - name: Build Documentation
         run: php bin/inkstone docs:build
         env:
-          DOCS_GITHUB_REPOSITORY: https://github.com/${{ github.repository }}
-          DOCS_BASE_URL: ${{ vars.DOCS_BASE_URL }}
+          INKSTONE_GITHUB_REPOSITORY: https://github.com/${{ github.repository }}
+          INKSTONE_BASE_URL: ${{ vars.INKSTONE_BASE_URL }}
 
       - name: Upload Artifact
         uses: actions/upload-pages-artifact@v3
