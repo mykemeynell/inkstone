@@ -17,7 +17,9 @@ final class BuildCommand extends Command
         {--source= : Markdown documentation source directory}
         {--output= : Static documentation output directory}
         {--base-url= : Base URL used by generated documentation links}
-        {--config= : Optional Inkstone PHP config file}';
+        {--config= : Optional Inkstone PHP config file}
+        {--no-check-links : Disable internal link validation}
+        {--warn-broken-links : Report broken links without failing the build}';
 
     protected $description = 'Build the static Inkstone documentation site.';
 

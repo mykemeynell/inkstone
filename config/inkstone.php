@@ -241,6 +241,10 @@ return [
 
         'asset_hashing' => true,
 
+        'check_links' => true,
+
+        'check_links_level' => 'error',
+
         'assets' => [
             'additional_paths' => [
                 resource_path('docs-assets'),

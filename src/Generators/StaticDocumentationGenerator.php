@@ -15,6 +15,7 @@ use Inkstone\DTOs\NavigationItem;
 use Inkstone\Pipelines\TransformerPipeline;
 use Inkstone\Services\AssetManifest;
 use Inkstone\Services\FileSystemWriter;
+use Inkstone\Services\LinkChecker;
 use Inkstone\Support\UrlBuilder;
 
 final class StaticDocumentationGenerator implements StaticSiteGenerator
@@ -28,6 +29,7 @@ final class StaticDocumentationGenerator implements StaticSiteGenerator
         private readonly SearchIndexer $search,
         private readonly FileSystemWriter $writer,
         private readonly AssetManifest $assets,
+        private readonly LinkChecker $linkChecker,
     ) {}
 
     public function build(): array
@@ -48,6 +50,8 @@ final class StaticDocumentationGenerator implements StaticSiteGenerator
             $this->discoverer->discover(),
         );
 
+        $this->checkLinks($documents);
+
         $pages = [];
 
         $navigationTree = $this->navigation->build($documents, null);
@@ -66,6 +70,48 @@ final class StaticDocumentationGenerator implements StaticSiteGenerator
         $this->copyAssets($outputPath);
 
         return $pages;
+    }
+
+    /**
+     * @param  list<Document>  $documents
+     */
+    private function checkLinks(array $documents): void
+    {
+        if (! (bool) config('inkstone.build.check_links', true)) {
+            return;
+        }
+
+        $reports = $this->linkChecker->check($documents);
+
+        if ($reports === []) {
+            return;
+        }
+
+        $level = (string) config('inkstone.build.check_links_level', 'error');
+
+        foreach ($reports as $report) {
+            logger()->warning(
+                sprintf(
+                    '[Inkstone] Broken link in "%s" (%s): %s — %s',
+                    $report->sourceFile,
+                    $report->sourceTitle,
+                    $report->brokenHref,
+                    $report->reason,
+                ),
+            );
+        }
+
+        $count = count($reports);
+
+        if ($level === 'error') {
+            throw new \RuntimeException(
+                sprintf(
+                    'Build failed: %d broken internal link%s found. Run with --warn-broken-links to report without failing.',
+                    $count,
+                    $count === 1 ? '' : 's',
+                ),
+            );
+        }
     }
 
     /**
