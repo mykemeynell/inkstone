@@ -63,6 +63,10 @@ return [
             'enabled' => true,
             'text' => 'Built with Inkstone',
             'url' => 'https://github.com/mykemeynell/inkstone',
+            'repository' => [
+                'url' => env('INKSTONE_GITHUB_REPOSITORY', 'https://github.com/mykemeynell/inkstone'),
+                'label' => 'Repository',
+            ],
         ],
 
     ],
