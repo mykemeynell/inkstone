@@ -118,6 +118,8 @@ Discovered files are copied into the generated output and linked from the theme.
     'generate_sitemap' => true,
     'generate_robots_txt' => true,
     'asset_hashing' => true,
+    'check_links' => true,
+    'check_links_level' => 'error',
 ],
 ```
 
@@ -149,6 +151,7 @@ The transformer order is configurable:
 'transformers' => [
     HeadingAnchorTransformer::class,
     ExternalLinkTransformer::class,
+    BaseUrlLinkTransformer::class,
     GitHubRelativeLinkTransformer::class,
     DemoBlockTransformer::class,
     SyntaxHighlightTransformer::class,
@@ -156,3 +159,5 @@ The transformer order is configurable:
 ```
 
 Order matters. Demo blocks are expanded before syntax highlighting so generated demo source and output code can be highlighted.
+
+`BaseUrlLinkTransformer` rewrites root-relative links to include the configured `base_url`. It runs before `GitHubRelativeLinkTransformer` so relative links are handled independently.
