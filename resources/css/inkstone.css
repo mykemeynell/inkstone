@@ -160,6 +160,7 @@ svg {
     color: var(--inkstone-text);
     display: flex;
     flex-grow: 1;
+    gap: 1rem;
     font: inherit;
     height: 38px;
     justify-content: space-between;
@@ -940,6 +941,6 @@ h6:hover .heading-anchor,
     }
 
     .inkstone-search-input {
-        max-width: calc(100% - 10rem);
+        min-width: calc(100% - 4rem);
     }
 }

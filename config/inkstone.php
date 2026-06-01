@@ -6,6 +6,7 @@ use Inkstone\Search\AlgoliaSearchIndexer;
 use Inkstone\Search\JsonSearchIndexer;
 use Inkstone\Search\LunrSearchIndexer;
 use Inkstone\Search\TypesenseSearchIndexer;
+use Inkstone\Transformers\BaseUrlLinkTransformer;
 use Inkstone\Transformers\DemoBlockTransformer;
 use Inkstone\Transformers\ExternalLinkTransformer;
 use Inkstone\Transformers\GitHubRelativeLinkTransformer;
@@ -311,6 +312,7 @@ return [
     'transformers' => [
         HeadingAnchorTransformer::class,
         ExternalLinkTransformer::class,
+        BaseUrlLinkTransformer::class,
         GitHubRelativeLinkTransformer::class,
         DemoBlockTransformer::class,
         SyntaxHighlightTransformer::class,
