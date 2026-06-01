@@ -55,6 +55,8 @@ Options:
 | `--output` | Static output directory |
 | `--base-url` | Generated site base URL when mounted below a subdirectory |
 | `--config` | Optional Inkstone config file |
+| `--no-check-links` | Disable internal link validation |
+| `--warn-broken-links` | Report broken links without failing the build |
 
 Build output includes pages, copied assets, search index, and optional static metadata files.
 
