@@ -380,4 +380,163 @@ final class LinkCheckerTest extends TestCase
 
         $this->assertCount(0, $reports);
     }
+
+    public function test_it_handles_empty_document_list(): void
+    {
+        $reports = $this->checker->check([]);
+
+        $this->assertCount(0, $reports);
+    }
+
+    public function test_it_skips_tel_links(): void
+    {
+        $documents = [
+            new Document(
+                sourcePath: 'docs/README.md',
+                relativePath: 'README.md',
+                slug: '',
+                url: '/',
+                html: '<p><a href="tel:+1234567890">Call</a></p>',
+                headings: [],
+            ),
+        ];
+
+        $reports = $this->checker->check($documents);
+
+        $this->assertCount(0, $reports);
+    }
+
+    public function test_it_skips_javascript_links(): void
+    {
+        $documents = [
+            new Document(
+                sourcePath: 'docs/README.md',
+                relativePath: 'README.md',
+                slug: '',
+                url: '/',
+                html: '<p><a href="javascript:void(0)">JS</a></p>',
+                headings: [],
+            ),
+        ];
+
+        $reports = $this->checker->check($documents);
+
+        $this->assertCount(0, $reports);
+    }
+
+    public function test_it_skips_data_uris(): void
+    {
+        $documents = [
+            new Document(
+                sourcePath: 'docs/README.md',
+                relativePath: 'README.md',
+                slug: '',
+                url: '/',
+                html: '<p><a href="data:text/plain,hello">Data</a></p>',
+                headings: [],
+            ),
+        ];
+
+        $reports = $this->checker->check($documents);
+
+        $this->assertCount(0, $reports);
+    }
+
+    public function test_it_handles_query_only_links(): void
+    {
+        $documents = [
+            new Document(
+                sourcePath: 'docs/README.md',
+                relativePath: 'README.md',
+                slug: '',
+                url: '/',
+                html: '<p><a href="?page=2">Next</a></p>',
+                headings: [],
+            ),
+        ];
+
+        $reports = $this->checker->check($documents);
+
+        $this->assertCount(0, $reports);
+    }
+
+    public function test_it_handles_slash_path_links(): void
+    {
+        $documents = [
+            new Document(
+                sourcePath: 'docs/README.md',
+                relativePath: 'README.md',
+                slug: '',
+                url: '/',
+                html: '<h1 id="intro">Introduction</h1><p><a href="/">Home</a><a href="/#intro">Home with anchor</a></p>',
+                headings: [],
+            ),
+        ];
+
+        $reports = $this->checker->check($documents);
+
+        $this->assertCount(0, $reports);
+    }
+
+    public function test_it_handles_trailing_slash_in_path(): void
+    {
+        $documents = [
+            new Document(
+                sourcePath: 'docs/README.md',
+                relativePath: 'README.md',
+                slug: '',
+                url: '/',
+                html: '<p><a href="/getting-started/installation/">Install</a></p>',
+                headings: [],
+            ),
+            new Document(
+                sourcePath: 'docs/getting-started/installation.md',
+                relativePath: 'getting-started/installation.md',
+                slug: 'getting-started/installation',
+                url: '/getting-started/installation',
+                html: '<p>Install page</p>',
+                headings: [],
+            ),
+        ];
+
+        $reports = $this->checker->check($documents);
+
+        $this->assertCount(0, $reports);
+    }
+
+    public function test_it_handles_malformed_urls_that_break_parse_url(): void
+    {
+        $documents = [
+            new Document(
+                sourcePath: 'docs/README.md',
+                relativePath: 'README.md',
+                slug: '',
+                url: '/',
+                html: '<p><a href="///">Triple slash</a></p>',
+                headings: [],
+            ),
+        ];
+
+        $reports = $this->checker->check($documents);
+
+        $this->assertCount(0, $reports);
+    }
+
+    public function test_it_handles_percent_encoded_fragments(): void
+    {
+        $documents = [
+            new Document(
+                sourcePath: 'docs/README.md',
+                relativePath: 'README.md',
+                slug: '',
+                url: '/',
+                html: '<h2 id="unicode-heading-日本語テスト">Unicode</h2><p><a href="#unicode-heading-%E6%97%A5%E6%9C%AC%E8%AA%9E%E3%83%86%E3%82%B9%E3%83%88">Unicode</a></p>',
+                headings: [],
+            ),
+        ];
+
+        $reports = $this->checker->check($documents);
+
+        $this->assertCount(0, $reports);
+    }
 }

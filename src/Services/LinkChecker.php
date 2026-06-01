@@ -118,6 +118,11 @@ final class LinkChecker
         }
 
         $parts = parse_url($href);
+
+        if ($parts === false) {
+            return null;
+        }
+
         $path = $parts['path'] ?? '';
         $fragment = isset($parts['fragment']) ? rawurldecode($parts['fragment']) : '';
 
