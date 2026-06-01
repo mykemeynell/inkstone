@@ -18,6 +18,8 @@
   ],
   "require": {
     "php": ">=8.2",
+    "ext-dom": "*",
+    "cebe/php-openapi": "^1.8",
     "illuminate/cache": "^11.0|^12.0|^13.0",
     "illuminate/config": "^11.0|^12.0|^13.0",
     "illuminate/console": "^11.0|^12.0|^13.0",
@@ -32,8 +34,7 @@
     "phiki/phiki": "^2.0",
     "symfony/filesystem": "^7.0",
     "symfony/finder": "^7.0",
-    "symfony/yaml": "^7.0",
-    "ext-dom": "*"
+    "symfony/yaml": "^7.0"
   },
   "require-dev": {
     "larastan/larastan": "^3.0",

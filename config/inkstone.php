@@ -6,6 +6,7 @@ use Inkstone\Search\AlgoliaSearchIndexer;
 use Inkstone\Search\JsonSearchIndexer;
 use Inkstone\Search\LunrSearchIndexer;
 use Inkstone\Search\TypesenseSearchIndexer;
+use Inkstone\Transformers\ApiHtmlTransformer;
 use Inkstone\Transformers\BaseUrlLinkTransformer;
 use Inkstone\Transformers\DemoBlockTransformer;
 use Inkstone\Transformers\ExternalLinkTransformer;
@@ -317,6 +318,33 @@ return [
     |--------------------------------------------------------------------------
     */
 
+    /*
+    |--------------------------------------------------------------------------
+    | API Documentation
+    |--------------------------------------------------------------------------
+    |
+    | When enabled, Inkstone will auto-discover OpenAPI spec files (openapi.yaml,
+    | openapi.yml, openapi.json) in your documentation source directory and render
+    | them as browsable API reference pages alongside your Markdown guides.
+    |
+    */
+
+    'api' => [
+
+        'enabled' => true,
+
+        'spec_filenames' => [
+            'openapi.yaml',
+            'openapi.yml',
+            'openapi.json',
+        ],
+
+        'base_path' => 'api',
+
+        'generate_code_examples' => true,
+
+    ],
+
     'transformers' => [
         HeadingAnchorTransformer::class,
         ExternalLinkTransformer::class,
@@ -324,6 +352,7 @@ return [
         GitHubRelativeLinkTransformer::class,
         DemoBlockTransformer::class,
         SyntaxHighlightTransformer::class,
+        ApiHtmlTransformer::class,
     ],
 
 ];

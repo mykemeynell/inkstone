@@ -24,7 +24,9 @@ use Inkstone\Generators\StaticDocumentationGenerator;
 use Inkstone\Parsers\CommonMarkMarkdownParser;
 use Inkstone\Pipelines\TransformerPipeline;
 use Inkstone\Renderers\BladeDocumentRenderer;
+use Inkstone\Services\ApiSpecDiscoverer;
 use Inkstone\Services\AssetManifest;
+use Inkstone\Services\CompositeDocumentDiscoverer;
 use Inkstone\Services\FilesystemDocumentDiscoverer;
 use Inkstone\Services\FileSystemWriter;
 use Inkstone\Services\LocalDocumentationServer;
@@ -45,13 +47,36 @@ class InkstoneServiceProvider extends ServiceProvider
 
         $this->app->singleton(Filesystem::class);
 
-        $this->app->singleton(DocumentDiscoverer::class, function (): DocumentDiscoverer {
+        $this->app->singleton(FilesystemDocumentDiscoverer::class, function (): FilesystemDocumentDiscoverer {
             return new FilesystemDocumentDiscoverer(
                 (string) config('inkstone.source_path'),
                 (string) config('inkstone.site.base_url', ''),
                 (bool) config('inkstone.build.pretty_urls', true),
                 (array) config('inkstone.discovery.ignore', []),
             );
+        });
+
+        $this->app->singleton(ApiSpecDiscoverer::class, function (): ApiSpecDiscoverer {
+            $specPath = config('inkstone.api.spec_path');
+
+            return new ApiSpecDiscoverer(
+                (string) config('inkstone.source_path'),
+                (array) config('inkstone.api.spec_filenames', ['openapi.yaml']),
+                is_string($specPath) && $specPath !== '' ? $specPath : null,
+                (string) config('inkstone.site.base_url', ''),
+                (string) config('inkstone.api.base_path', 'api'),
+                (bool) config('inkstone.build.pretty_urls', true),
+            );
+        });
+
+        $this->app->singleton(DocumentDiscoverer::class, function ($app): DocumentDiscoverer {
+            $discoverers = [$app->make(FilesystemDocumentDiscoverer::class)];
+
+            if ((bool) config('inkstone.api.enabled', true)) {
+                $discoverers[] = $app->make(ApiSpecDiscoverer::class);
+            }
+
+            return new CompositeDocumentDiscoverer($discoverers);
         });
 
         $this->app->singleton(MarkdownParser::class, function (): MarkdownParser {
