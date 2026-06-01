@@ -57,8 +57,12 @@ Options:
 | `--config` | Optional Inkstone config file |
 | `--no-check-links` | Disable internal link validation |
 | `--warn-broken-links` | Report broken links without failing the build |
+| `--api-spec` | Path to an OpenAPI specification file to include in the documentation |
+| `--no-api` | Disable API documentation generation |
 
 Build output includes pages, copied assets, search index, and optional static metadata files.
+
+When `--api-spec` is provided, the spec file is parsed and rendered as an API reference page alongside the Markdown-generated pages. Use `--no-api` to skip API spec discovery for a specific build.
 
 ## docs:serve
 

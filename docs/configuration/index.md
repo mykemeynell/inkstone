@@ -143,6 +143,25 @@ build/docs/installation/index.html
 
 Additional asset directories are copied into `build/docs/assets`. Source-level image files are always copied during the build.
 
+## API Specifications
+
+Inkstone auto-discovers OpenAPI specification files in your documentation source directory. When an `openapi.yaml`, `openapi.yml`, or `openapi.json` file is present, it is parsed and rendered as a browsable API reference page.
+
+```php
+'api' => [
+    'enabled' => true,
+    'spec_filenames' => [
+        'openapi.yaml',
+        'openapi.yml',
+        'openapi.json',
+    ],
+    'base_path' => 'api',
+    'generate_code_examples' => true,
+],
+```
+
+API pages integrate into navigation, search, and link checking automatically. See [API Specifications](/features/api-specifications) for details.
+
 ## Transformers
 
 The transformer order is configurable:
@@ -155,9 +174,12 @@ The transformer order is configurable:
     GitHubRelativeLinkTransformer::class,
     DemoBlockTransformer::class,
     SyntaxHighlightTransformer::class,
+    ApiHtmlTransformer::class,
 ],
 ```
 
 Order matters. Demo blocks are expanded before syntax highlighting so generated demo source and output code can be highlighted.
 
 `BaseUrlLinkTransformer` rewrites root-relative links to include the configured `base_url`. It runs before `GitHubRelativeLinkTransformer` so relative links are handled independently.
+
+`ApiHtmlTransformer` runs last. It converts OpenAPI specification metadata into structured HTML. API documents skip the Markdown parser — the transformer generates endpoint cards, parameter tables, and schema documentation directly.

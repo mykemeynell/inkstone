@@ -188,6 +188,25 @@ Relative repository links are rewritten to raw GitHub URLs.
 
 Demo blocks are static build-time examples. `describe_void_output` controls whether void demo output is described textually. `use_disposable_database` creates an in-memory SQLite database per demo. `database` configures the database connection. `show_stack_traces` controls stack trace rendering for demo exceptions.
 
+## API
+
+```php
+'api' => [
+    'enabled' => true,
+    'spec_filenames' => [
+        'openapi.yaml',
+        'openapi.yml',
+        'openapi.json',
+    ],
+    'base_path' => 'api',
+    'generate_code_examples' => true,
+],
+```
+
+When `enabled`, Inkstone searches the documentation source directory for files matching `spec_filenames`. Each discovered spec is parsed by `cebe/php-openapi` and rendered as an API reference page under the `base_path` URL prefix. The generated page includes endpoint groups by tag, parameter tables, request body schemas, response codes, and component schemas.
+
+Set `enabled` to `false` or use the `--no-api` CLI flag to disable API documentation for a build.
+
 ## Local Server
 
 ```php

@@ -24,6 +24,8 @@ Useful options:
 - `--output=build/docs` sets the generated static site directory.
 - `--base-url=/docs` sets the base URL when the generated site is mounted below a subdirectory.
 - `--config=inkstone.php` loads an optional PHP config file and merges it over the defaults.
+- `--api-spec=path/to/openapi.yaml` includes an OpenAPI specification file in the generated documentation.
+- `--no-api` disables API documentation generation for this build.
 
 ## Laravel Usage
 

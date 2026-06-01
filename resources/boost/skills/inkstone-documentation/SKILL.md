@@ -78,6 +78,7 @@ vendor/bin/inkstone docs:ai-prompt --source=. --write=inkstone/ai/documentation-
 - Keep the generated site static and deployable.
 - Use Markdown links that resolve in the generated site.
 - Use `demo:php`, `demo:markdown`, and `demo:html` only for build-time rendered examples.
+- OpenAPI specification files (`openapi.yaml`, `openapi.yml`, `openapi.json`) in `docs/` are auto-discovered and rendered as API reference pages at build time. Place the spec file alongside Markdown guides rather than in a separate directory.
 - Mention Laravel Artisan usage for Laravel apps and standalone CLI usage for packages without Laravel.
 - Avoid inventing SaaS, auth, CMS, analytics, AI search, marketplace, collaboration, or live playground features.
 - Prefer concise task-oriented pages over long marketing pages.

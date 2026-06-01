@@ -30,6 +30,7 @@ order: 1
 - Prefer root-relative links like `/getting-started/installation` for links between generated documentation pages when building for the served root.
 - Use fenced code blocks with language identifiers.
 - Use `demo:markdown`, `demo:html`, or `demo:php` blocks only when static rendered examples are useful.
+- If the project includes an OpenAPI specification file, place it in the `docs/` directory as `openapi.yaml` or `openapi.json` so Inkstone auto-discovers and renders it as an API reference page.
 - Do not invent unsupported features.
 - Do not document SaaS, authentication, analytics, AI search, CMS, marketplaces, or live playgrounds unless the project actually contains them.
 
