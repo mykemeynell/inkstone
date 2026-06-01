@@ -62,7 +62,7 @@ return [
         'footer' => [
             'enabled' => true,
             'text' => 'Built with Inkstone',
-            'url' => 'https://github.com/mykemeynell/inkstone',
+            'url' => 'https://mykemeynell.github.io/inkstone',
             'repository' => [
                 'url' => env('INKSTONE_GITHUB_REPOSITORY', 'https://github.com/mykemeynell/inkstone'),
                 'label' => 'Repository',
