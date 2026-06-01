@@ -30,7 +30,11 @@ This page lists the main `inkstone` configuration keys.
     'footer' => [
         'enabled' => true,
         'text' => 'Built with Inkstone',
-        'url' => 'https://github.com/mykemeynell/inkstone',
+        'url' => 'https://mykemeynell.github.io/inkstone',
+        'repository' => [
+            'url' => env('INKSTONE_GITHUB_REPOSITORY', 'https://github.com/mykemeynell/inkstone'),
+            'label' => 'Repository',
+        ],
     ],
 ],
 ```
@@ -39,7 +43,7 @@ This page lists the main `inkstone` configuration keys.
 
 `favicon` and `logo` can be explicit URLs or `null` for source-level discovery. `logo` accepts a string or an array with `light` and `dark` keys for separate logo variants per theme mode.
 
-The footer can be disabled or customized from `site.footer`. Set `site.show_title` to `false` to hide the site title from the header brand.
+The footer can be disabled or customized from `site.footer`. Set `site.show_title` to `false` to hide the site title from the header brand. `site.footer.repository.url` controls the repository link shown next to the footer text; omit or set to an empty string to remove it. `site.footer.repository.label` customises the link text.
 
 ## Theme
 
@@ -146,6 +150,8 @@ Relative repository links are rewritten to raw GitHub URLs.
     'generate_sitemap' => true,
     'generate_robots_txt' => true,
     'asset_hashing' => true,
+    'check_links' => true,
+    'check_links_level' => 'error',
     'assets' => [
         'additional_paths' => [ ... ],
         'dist_path' => null,
@@ -153,6 +159,8 @@ Relative repository links are rewritten to raw GitHub URLs.
     ],
 ],
 ```
+
+`check_links` validates internal `<a href>` links at build time and fails the build when broken links are found. Set `check_links_level` to `'warn'` to report broken links without failing.
 
 ## Demos
 
