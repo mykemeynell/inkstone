@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Inkstone\Services;
 
 use DOMElement;
-use DOMXPath;
 use Inkstone\DTOs\BrokenLinkReport;
 use Inkstone\DTOs\Document;
 use Inkstone\Support\HtmlDocument;
