@@ -131,8 +131,8 @@ svg {
 
 .inkstone-icon-button.is-subtle,
 .inkstone-copy-button.is-subtle {
-    background: transparent;
-    border-color: transparent;
+    background: var(--inkstone-copy-bg);
+    border-color: var(--inkstone-copy-bg);
     box-shadow: none;
 }
 
