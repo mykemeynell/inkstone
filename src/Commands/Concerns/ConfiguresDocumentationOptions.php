@@ -41,6 +41,14 @@ trait ConfiguresDocumentationOptions
         if (is_string($baseUrl) && $baseUrl !== '') {
             config()->set('inkstone.site.base_url', UrlBuilder::normalizeBaseUrl($baseUrl));
         }
+
+        if ((bool) $this->documentationOption('no-check-links')) {
+            config()->set('inkstone.build.check_links', false);
+        }
+
+        if ((bool) $this->documentationOption('warn-broken-links')) {
+            config()->set('inkstone.build.check_links_level', 'warn');
+        }
     }
 
     private function absolutePath(string $path): string

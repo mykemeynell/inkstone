@@ -31,6 +31,7 @@ use Inkstone\Services\LocalDocumentationServer;
 use Inkstone\Services\NavigationBuilder;
 use Inkstone\Services\SearchDriverConfig;
 use Inkstone\Services\ThemeResolver;
+use Inkstone\Transformers\BaseUrlLinkTransformer;
 use Inkstone\Transformers\DemoBlockTransformer;
 use Inkstone\Transformers\GitHubRelativeLinkTransformer;
 use Inkstone\Transformers\SyntaxHighlightTransformer;
@@ -104,6 +105,10 @@ class InkstoneServiceProvider extends ServiceProvider
             }
 
             return new TransformerPipeline($transformers);
+        });
+
+        $this->app->bind(BaseUrlLinkTransformer::class, function (): BaseUrlLinkTransformer {
+            return new BaseUrlLinkTransformer((string) config('inkstone.site.base_url', ''));
         });
 
         $this->app->bind(GitHubRelativeLinkTransformer::class, function (): GitHubRelativeLinkTransformer {

@@ -89,10 +89,21 @@
 
             @if(data_get($config, 'site.footer.enabled', true))
                 <footer class="inkstone-footer">
-                    @if(data_get($config, 'site.footer.url'))
-                        <a href="{{ data_get($config, 'site.footer.url') }}" target="_blank" rel="noopener noreferrer">{{ data_get($config, 'site.footer.text', 'Built with Inkstone') }}</a>
-                    @else
-                        <span>{{ data_get($config, 'site.footer.text', 'Built with Inkstone') }}</span>
+                    <div>
+                        @if(data_get($config, 'site.footer.url'))
+                            <a href="{{ data_get($config, 'site.footer.url') }}" target="_blank" rel="noopener noreferrer">{{ data_get($config, 'site.footer.text', 'Built with Inkstone') }}</a>
+                        @else
+                            <span>{{ data_get($config, 'site.footer.text', 'Built with Inkstone') }}</span>
+                        @endif
+                    </div>
+                    @php($repoUrl = data_get($config, 'site.footer.repository.url'))
+                    @if($repoUrl)
+                        <div>
+                            <a href="{{ $repoUrl }}" class="with-icon" target="_blank" rel="noopener noreferrer">
+                                @include('inkstone::themes.default.partials.repository-icon')
+                                <span>{{ data_get($config, 'site.footer.repository.label', 'Repository') }}</span>
+                            </a>
+                        </div>
                     @endif
                 </footer>
             @endif

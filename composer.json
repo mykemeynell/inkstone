@@ -32,7 +32,8 @@
     "phiki/phiki": "^2.0",
     "symfony/filesystem": "^7.0",
     "symfony/finder": "^7.0",
-    "symfony/yaml": "^7.0"
+    "symfony/yaml": "^7.0",
+    "ext-dom": "*"
   },
   "require-dev": {
     "larastan/larastan": "^3.0",

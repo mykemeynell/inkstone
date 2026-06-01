@@ -6,6 +6,7 @@ use Inkstone\Search\AlgoliaSearchIndexer;
 use Inkstone\Search\JsonSearchIndexer;
 use Inkstone\Search\LunrSearchIndexer;
 use Inkstone\Search\TypesenseSearchIndexer;
+use Inkstone\Transformers\BaseUrlLinkTransformer;
 use Inkstone\Transformers\DemoBlockTransformer;
 use Inkstone\Transformers\ExternalLinkTransformer;
 use Inkstone\Transformers\GitHubRelativeLinkTransformer;
@@ -61,7 +62,11 @@ return [
         'footer' => [
             'enabled' => true,
             'text' => 'Built with Inkstone',
-            'url' => 'https://github.com/mykemeynell/inkstone',
+            'url' => 'https://mykemeynell.github.io/inkstone',
+            'repository' => [
+                'url' => env('INKSTONE_GITHUB_REPOSITORY', 'https://github.com/mykemeynell/inkstone'),
+                'label' => 'Repository',
+            ],
         ],
 
     ],
@@ -240,6 +245,10 @@ return [
 
         'asset_hashing' => true,
 
+        'check_links' => true,
+
+        'check_links_level' => 'error',
+
         'assets' => [
             'additional_paths' => [
                 resource_path('docs-assets'),
@@ -311,6 +320,7 @@ return [
     'transformers' => [
         HeadingAnchorTransformer::class,
         ExternalLinkTransformer::class,
+        BaseUrlLinkTransformer::class,
         GitHubRelativeLinkTransformer::class,
         DemoBlockTransformer::class,
         SyntaxHighlightTransformer::class,
