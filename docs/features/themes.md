@@ -189,12 +189,16 @@ The default theme renders a small credits footer below the page content:
     'footer' => [
         'enabled' => true,
         'text' => 'Built with Inkstone',
-        'url' => 'https://github.com/mykemeynell/inkstone',
+        'url' => 'https://mykemeynell.github.io/inkstone',
+        'repository' => [
+            'url' => env('INKSTONE_GITHUB_REPOSITORY', 'https://github.com/mykemeynell/inkstone'),
+            'label' => 'Repository',
+        ],
     ],
 ],
 ```
 
-Set `enabled` to `false` to hide it, or change `text` and `url` to point to your own project.
+Set `enabled` to `false` to hide the footer, or change `text` and `url` to point to your own project. The repository link can be removed by omitting or clearing `repository.url`. Customise the link text with `repository.label`.
 
 ## CSS Custom Properties
 
