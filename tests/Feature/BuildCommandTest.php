@@ -67,6 +67,39 @@ final class BuildCommandTest extends TestCase
         $this->assertStringNotContainsString('/docs/assets/', $html);
     }
 
+    public function test_route_path_does_not_change_static_host_asset_urls(): void
+    {
+        config()->set('inkstone.site.base_url', '');
+        config()->set('inkstone.routes.path', 'customer-docs');
+
+        $this->artisan('docs:build')->assertExitCode(0);
+
+        $html = file_get_contents($this->outputPath.'/index.html') ?: '';
+
+        $this->assertStringContainsString('href="/assets/css/inkstone.css"', $html);
+        $this->assertStringContainsString('href="/assets/css/themes/default.css"', $html);
+        $this->assertStringContainsString('src="/assets/js/inkstone.js"', $html);
+        $this->assertStringContainsString('data-inkstone-search-index="/search-index.json"', $html);
+        $this->assertStringNotContainsString('/customer-docs/assets/', $html);
+        $this->assertStringNotContainsString('/customer-docs/search-index.json', $html);
+    }
+
+    public function test_github_pages_base_url_controls_static_host_asset_urls(): void
+    {
+        config()->set('inkstone.site.base_url', '/project-docs');
+        config()->set('inkstone.routes.path', 'docs');
+
+        $this->artisan('docs:build')->assertExitCode(0);
+
+        $html = file_get_contents($this->outputPath.'/index.html') ?: '';
+
+        $this->assertStringContainsString('href="/project-docs/assets/css/inkstone.css"', $html);
+        $this->assertStringContainsString('href="/project-docs/assets/css/themes/default.css"', $html);
+        $this->assertStringContainsString('src="/project-docs/assets/js/inkstone.js"', $html);
+        $this->assertStringContainsString('data-inkstone-search-index="/project-docs/search-index.json"', $html);
+        $this->assertStringNotContainsString('/docs/assets/', $html);
+    }
+
     public function test_it_uses_vite_manifest_assets_when_available(): void
     {
         $filesystem = new Filesystem;

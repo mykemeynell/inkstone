@@ -54,6 +54,7 @@ final class ServeGeneratedDocumentationController
             'jpg', 'jpeg' => 'image/jpeg',
             'gif' => 'image/gif',
             'webp' => 'image/webp',
+            'avif' => 'image/avif',
             'ico' => 'image/x-icon',
             'wasm' => 'application/wasm',
             'woff' => 'font/woff',
