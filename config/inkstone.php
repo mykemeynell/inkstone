@@ -33,6 +33,39 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Laravel Routes
+    |--------------------------------------------------------------------------
+    |
+    | Call Inkstone::routes() from routes/web.php to serve the generated docs
+    | from this Laravel application. The route server reads from output_path and
+    | does not rebuild docs during requests. When serving from a path such as
+    | /docs, set site.base_url to the same path before running docs:build.
+    |
+    */
+
+    'routes' => [
+
+        'domain' => env('INKSTONE_ROUTE_DOMAIN'),
+
+        'path' => env('INKSTONE_ROUTE_PATH', 'docs'),
+
+        /*
+        |--------------------------------------------------------------------------
+        | Additional Route Middleware
+        |--------------------------------------------------------------------------
+        |
+        | Add only middleware that should apply specifically to the documentation
+        | routes. Routes defined in routes/web.php already run in Laravel's web
+        | middleware group.
+        |
+        */
+
+        'middleware' => [],
+
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Site Metadata
     |--------------------------------------------------------------------------
     |

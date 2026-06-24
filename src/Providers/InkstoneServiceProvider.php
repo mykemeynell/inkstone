@@ -21,14 +21,17 @@ use Inkstone\Demos\DemoRendererRegistry;
 use Inkstone\Demos\DemoRuntimeResolver;
 use Inkstone\Demos\SimpleDemoRuntime;
 use Inkstone\Generators\StaticDocumentationGenerator;
+use Inkstone\Inkstone;
 use Inkstone\Parsers\CommonMarkMarkdownParser;
 use Inkstone\Pipelines\TransformerPipeline;
 use Inkstone\Renderers\BladeDocumentRenderer;
+use Inkstone\Routing\DocumentationRouteRegistrar;
 use Inkstone\Services\ApiSpecDiscoverer;
 use Inkstone\Services\AssetManifest;
 use Inkstone\Services\CompositeDocumentDiscoverer;
 use Inkstone\Services\FilesystemDocumentDiscoverer;
 use Inkstone\Services\FileSystemWriter;
+use Inkstone\Services\GeneratedDocumentationFileServer;
 use Inkstone\Services\LocalDocumentationServer;
 use Inkstone\Services\NavigationBuilder;
 use Inkstone\Services\SearchDriverConfig;
@@ -99,6 +102,8 @@ class InkstoneServiceProvider extends ServiceProvider
         $this->app->singleton(AssetManifest::class);
         $this->app->singleton(DocumentRenderer::class, BladeDocumentRenderer::class);
         $this->app->singleton(FileSystemWriter::class);
+        $this->app->singleton(GeneratedDocumentationFileServer::class);
+        $this->app->singleton(DocumentationRouteRegistrar::class);
         $this->app->singleton(LocalDocumentationServer::class);
         $this->app->singleton(DemoRendererRegistry::class);
         $this->app->singleton(DemoRuntimeResolver::class, function (): DemoRuntimeResolver {
@@ -153,7 +158,13 @@ class InkstoneServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(StaticSiteGenerator::class, StaticDocumentationGenerator::class);
-        $this->app->alias(StaticSiteGenerator::class, 'inkstone');
+        $this->app->singleton(Inkstone::class, function ($app): Inkstone {
+            return new Inkstone(
+                $app->make(StaticSiteGenerator::class),
+                $app->make(DocumentationRouteRegistrar::class),
+            );
+        });
+        $this->app->alias(Inkstone::class, 'inkstone');
     }
 
     private function transformerClass(int|string $key, mixed $value): ?string

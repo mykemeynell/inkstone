@@ -4,6 +4,10 @@ namespace Inkstone\Facades;
 
 use Illuminate\Support\Facades\Facade;
 
+/**
+ * @method static list<\Inkstone\DTOs\RenderedPage> build()
+ * @method static void routes()
+ */
 class DocsGenerator extends Facade
 {
     protected static function getFacadeAccessor(): string
