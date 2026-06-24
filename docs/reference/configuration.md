@@ -45,6 +45,20 @@ This page lists the main `inkstone` configuration keys.
 
 The footer can be disabled or customized from `site.footer`. Set `site.show_title` to `false` to hide the site title from the header brand. `site.footer.repository.url` controls the repository link shown next to the footer text; omit or set to an empty string to remove it. `site.footer.repository.label` customises the link text.
 
+## Laravel Routes
+
+```php
+'routes' => [
+    'domain' => env('INKSTONE_ROUTE_DOMAIN'),
+    'path' => env('INKSTONE_ROUTE_PATH', 'docs'),
+    'middleware' => [],
+],
+```
+
+Call `Inkstone::routes()` from `routes/web.php` to serve generated output from the Laravel application. `routes.path` controls the mount path, `routes.domain` restricts docs to a specific host, and `routes.middleware` adds middleware only for the documentation routes.
+
+The route server reads from `output_path` and does not build docs during requests. Keep `site.base_url` aligned with the route path before running `docs:build`, for example `/docs` when `routes.path` is `docs`.
+
 ## Theme
 
 ```php

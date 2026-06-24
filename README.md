@@ -40,6 +40,16 @@ php artisan docs:clean
 
 `docs:install` publishes Inkstone configuration, starter docs, theme assets, and deployment examples. `docs:build` writes deployable static HTML into `build/docs` by default.
 
+To serve the generated output from the Laravel application, add the route macro to `routes/web.php`:
+
+```php
+use Inkstone\Facades\DocsGenerator as Inkstone;
+
+Inkstone::routes();
+```
+
+The default route path is `/docs`. Set `site.base_url` to `/docs` before building when serving from that path.
+
 ## Configuration
 
 Inkstone uses `config/inkstone.php` inside Laravel applications. In standalone package repositories, create `inkstone.php` or `config/inkstone.php` in the package root.

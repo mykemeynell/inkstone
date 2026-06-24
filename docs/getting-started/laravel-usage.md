@@ -60,6 +60,20 @@ php artisan docs:build
 
 The build command discovers documents, parses Markdown, transforms HTML, renders the theme, copies assets, writes static pages, and generates search and metadata files.
 
+## Serve Generated Docs In Laravel
+
+To serve the generated output from the Laravel application, add Inkstone's routes to `routes/web.php`:
+
+```php
+use Inkstone\Facades\DocsGenerator as Inkstone;
+
+Inkstone::routes();
+```
+
+By default, this serves the generated files from `/docs`. If you keep that default, set `site.base_url` to `/docs` before running `docs:build` so generated asset and internal links match the mounted path.
+
+You can change the mounted domain, path, and additional middleware in `config/inkstone.php` under the `routes` key.
+
 ## Serve Locally
 
 ```bash
