@@ -6,6 +6,7 @@ namespace Inkstone\Http\Controllers;
 
 use Inkstone\Services\GeneratedDocumentationFileServer;
 use Inkstone\Services\GeneratedDocumentationUrlRewriter;
+use Inkstone\Services\SearchDriverConfig;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -14,9 +15,11 @@ final class ServeGeneratedDocumentationController
     public function __invoke(
         GeneratedDocumentationFileServer $server,
         GeneratedDocumentationUrlRewriter $rewriter,
+        SearchDriverConfig $search,
         ?string $inkstonePath = null,
     ): BinaryFileResponse|Response {
-        $file = $server->resolve($inkstonePath ?? '');
+        $requestPath = $inkstonePath ?? '';
+        $file = $server->resolve($requestPath);
 
         if ($file === null) {
             abort(404);
@@ -34,9 +37,29 @@ final class ServeGeneratedDocumentationController
             ]);
         }
 
+        if ($this->isSearchIndexPath($requestPath, $search)) {
+            $contents = file_get_contents($file);
+
+            if (! is_string($contents)) {
+                abort(404);
+            }
+
+            return response($rewriter->rewriteSearchIndex($contents), 200, [
+                'Content-Type' => $this->contentTypeFor($file),
+            ]);
+        }
+
         return response()->file($file, [
             'Content-Type' => $this->contentTypeFor($file),
         ]);
+    }
+
+    private function isSearchIndexPath(string $requestPath, SearchDriverConfig $search): bool
+    {
+        $requestPath = trim(str_replace('\\', '/', rawurldecode($requestPath)), '/');
+        $indexPath = trim(str_replace('\\', '/', $search->indexPath()), '/');
+
+        return $requestPath !== '' && $requestPath === $indexPath;
     }
 
     private function contentTypeFor(string $file): string

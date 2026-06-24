@@ -6,6 +6,7 @@ namespace Inkstone\Tests\Feature;
 
 use DOMDocument;
 use DOMElement;
+use Illuminate\Testing\TestResponse;
 use Inkstone\Tests\TestCase;
 use Symfony\Component\Filesystem\Filesystem;
 
@@ -85,6 +86,16 @@ final class RouteServingTest extends TestCase
         foreach ($this->browserAssetUrls($html) as $url => $contentType) {
             $this->assertStringStartsWith('/docs/', $url, sprintf('Expected %s to be mounted below /docs.', $url));
             $this->assertResponseContentType($url, $contentType);
+        }
+
+        $searchIndex = $this->jsonResponse($this->get('/docs/search-index.json')->assertOk());
+        $urls = array_column($searchIndex, 'url');
+
+        $this->assertContains('/docs', $urls);
+
+        foreach ($urls as $url) {
+            $this->assertStringStartsWith('/docs', $url);
+            $this->get($url)->assertOk();
         }
 
         (new Filesystem)->remove($sourcePath);
@@ -170,7 +181,7 @@ HTML);
             ->assertOk();
 
         $this->assertStringStartsWith('application/json', (string) $json->headers->get('Content-Type'));
-        $json->assertStreamedContent('{"entries":[]}');
+        $this->assertSame('{"entries":[]}', $this->responseBody($json));
 
         $xml = $this->get('/docs/sitemap.xml')
             ->assertOk();
@@ -183,6 +194,97 @@ HTML);
 
         $this->assertStringStartsWith('text/plain', (string) $text->headers->get('Content-Type'));
         $text->assertStreamedContent("User-agent: *\nAllow: /\n");
+    }
+
+    public function test_it_rewrites_route_served_search_result_urls_for_json_indexes(): void
+    {
+        $this->writeOutputFile('index.html', '<h1>Home</h1>');
+        $this->writeOutputFile('getting-started/index.html', '<h1>Getting Started</h1>');
+        $this->writeOutputFile('search-index.json', json_encode([
+            ['title' => 'Home', 'url' => '/', 'content' => 'Home'],
+            ['title' => 'Getting Started', 'url' => '/getting-started', 'content' => 'Getting Started'],
+            ['title' => 'Already Mounted', 'url' => '/docs/getting-started', 'content' => 'Already Mounted'],
+            ['title' => 'Application Login', 'url' => '/login', 'content' => 'Application Login'],
+            ['title' => 'External', 'url' => 'https://example.com/docs', 'content' => 'External'],
+            ['title' => 'Protocol Relative', 'url' => '//cdn.example.com/docs', 'content' => 'Protocol Relative'],
+            ['title' => 'Fragment', 'url' => '#intro', 'content' => 'Fragment'],
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) ?: '[]');
+
+        \Inkstone::routes();
+
+        $payload = $this->jsonResponse($this->get('/docs/search-index.json')->assertOk());
+
+        $this->assertSame('/docs', $payload[0]['url']);
+        $this->assertSame('/docs/getting-started', $payload[1]['url']);
+        $this->assertSame('/docs/getting-started', $payload[2]['url']);
+        $this->assertSame('/login', $payload[3]['url']);
+        $this->assertSame('https://example.com/docs', $payload[4]['url']);
+        $this->assertSame('//cdn.example.com/docs', $payload[5]['url']);
+        $this->assertSame('#intro', $payload[6]['url']);
+
+        $this->get($payload[0]['url'])->assertOk();
+        $this->get($payload[1]['url'])->assertOk();
+    }
+
+    public function test_it_rewrites_route_served_search_result_urls_for_lunr_indexes(): void
+    {
+        config()->set('inkstone.search.driver', 'lunr');
+
+        $this->writeOutputFile('index.html', '<h1>Home</h1>');
+        $this->writeOutputFile('guides/advanced/index.html', '<h1>Advanced</h1>');
+        $this->writeOutputFile('lunr-index.json', json_encode([
+            'documents' => [
+                ['id' => 'index', 'title' => 'Home', 'url' => '/', 'content' => 'Home'],
+                ['id' => 'guides/advanced', 'title' => 'Advanced', 'url' => '/guides/advanced', 'content' => 'Advanced'],
+                ['id' => 'login', 'title' => 'Login', 'url' => '/login', 'content' => 'Login'],
+            ],
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) ?: '{"documents":[]}');
+
+        \Inkstone::routes();
+
+        $payload = $this->jsonResponse($this->get('/docs/lunr-index.json')->assertOk());
+
+        $this->assertSame('/docs', $payload['documents'][0]['url']);
+        $this->assertSame('/docs/guides/advanced', $payload['documents'][1]['url']);
+        $this->assertSame('/login', $payload['documents'][2]['url']);
+
+        $this->get($payload['documents'][0]['url'])->assertOk();
+        $this->get($payload['documents'][1]['url'])->assertOk();
+    }
+
+    public function test_it_rewrites_route_served_search_result_urls_for_custom_index_paths(): void
+    {
+        config()->set('inkstone.search.drivers.json.config.index_path', 'search/docs-index.json');
+
+        $this->writeOutputFile('index.html', '<h1>Home</h1>');
+        $this->writeOutputFile('configuration/index.html', '<h1>Configuration</h1>');
+        $this->writeOutputFile('search/docs-index.json', json_encode([
+            ['title' => 'Configuration', 'url' => '/configuration', 'content' => 'Configuration'],
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) ?: '[]');
+
+        \Inkstone::routes();
+
+        $payload = $this->jsonResponse($this->get('/docs/search/docs-index.json')->assertOk());
+
+        $this->assertSame('/docs/configuration', $payload[0]['url']);
+        $this->get($payload[0]['url'])->assertOk();
+    }
+
+    public function test_it_does_not_rewrite_non_search_json_or_invalid_search_json(): void
+    {
+        $this->writeOutputFile('index.html', '<h1>Home</h1>');
+        $this->writeOutputFile('metadata.json', '{"url":"/"}');
+        $this->writeOutputFile('search-index.json', '{"url":');
+
+        \Inkstone::routes();
+
+        $this->get('/docs/metadata.json')
+            ->assertOk()
+            ->assertStreamedContent('{"url":"/"}');
+
+        $invalid = $this->get('/docs/search-index.json')->assertOk();
+
+        $this->assertSame('{"url":', $this->responseBody($invalid));
     }
 
     public function test_it_serves_browser_asset_types_with_safe_content_types(): void
@@ -328,5 +430,31 @@ HTML);
             (string) $response->headers->get('Content-Type'),
             sprintf('Expected %s to be served as %s.', $uri, $contentType),
         );
+    }
+
+    /**
+     * @return array<mixed>
+     */
+    private function jsonResponse(TestResponse $response): array
+    {
+        $decoded = json_decode($this->responseBody($response), true);
+
+        $this->assertIsArray($decoded);
+
+        return $decoded;
+    }
+
+    private function responseBody(TestResponse $response): string
+    {
+        $content = $response->baseResponse->getContent();
+
+        if (is_string($content)) {
+            return $content;
+        }
+
+        ob_start();
+        $response->baseResponse->sendContent();
+
+        return ob_get_clean() ?: '';
     }
 }

@@ -23,6 +23,31 @@ final class GeneratedDocumentationUrlRewriter
         ) ?? $html;
     }
 
+    public function rewriteSearchIndex(string $json): string
+    {
+        $prefix = $this->routePrefix();
+
+        if ($prefix === '') {
+            return $json;
+        }
+
+        $decoded = json_decode($json, true);
+
+        if (! is_array($decoded)) {
+            return $json;
+        }
+
+        if (array_is_list($decoded)) {
+            $decoded = $this->rewriteSearchEntries($decoded, $prefix);
+        } elseif (isset($decoded['documents']) && is_array($decoded['documents'])) {
+            $decoded['documents'] = $this->rewriteSearchEntries($decoded['documents'], $prefix);
+        } else {
+            return $json;
+        }
+
+        return json_encode($decoded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) ?: $json;
+    }
+
     private function routePrefix(): string
     {
         $path = config('inkstone.routes.path', 'docs');
@@ -52,5 +77,29 @@ final class GeneratedDocumentationUrlRewriter
         $suffix = substr($url, strlen($path));
 
         return $prefix.($path === '/' ? '' : $path).$suffix;
+    }
+
+    /**
+     * @param  array<mixed>  $entries
+     * @return array<mixed>
+     */
+    private function rewriteSearchEntries(array $entries, string $prefix): array
+    {
+        foreach ($entries as $key => $entry) {
+            if (! is_array($entry)) {
+                continue;
+            }
+
+            $url = $entry['url'] ?? null;
+
+            if (! is_string($url)) {
+                continue;
+            }
+
+            $entry['url'] = $this->rewriteUrl($url, $prefix);
+            $entries[$key] = $entry;
+        }
+
+        return $entries;
     }
 }

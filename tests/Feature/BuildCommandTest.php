@@ -82,6 +82,13 @@ final class BuildCommandTest extends TestCase
         $this->assertStringContainsString('data-inkstone-search-index="/search-index.json"', $html);
         $this->assertStringNotContainsString('/customer-docs/assets/', $html);
         $this->assertStringNotContainsString('/customer-docs/search-index.json', $html);
+
+        $searchIndex = json_decode(file_get_contents($this->outputPath.'/search-index.json') ?: '[]', true);
+        $urls = array_column(is_array($searchIndex) ? $searchIndex : [], 'url');
+
+        $this->assertContains('/', $urls);
+        $this->assertContains('/docs/getting-started/installation', $urls);
+        $this->assertNotContains('/customer-docs', $urls);
     }
 
     public function test_github_pages_base_url_controls_static_host_asset_urls(): void
@@ -98,6 +105,13 @@ final class BuildCommandTest extends TestCase
         $this->assertStringContainsString('src="/project-docs/assets/js/inkstone.js"', $html);
         $this->assertStringContainsString('data-inkstone-search-index="/project-docs/search-index.json"', $html);
         $this->assertStringNotContainsString('/docs/assets/', $html);
+
+        $searchIndex = json_decode(file_get_contents($this->outputPath.'/search-index.json') ?: '[]', true);
+        $urls = array_column(is_array($searchIndex) ? $searchIndex : [], 'url');
+
+        $this->assertContains('/project-docs', $urls);
+        $this->assertContains('/project-docs/docs/getting-started/installation', $urls);
+        $this->assertNotContains('/docs', $urls);
     }
 
     public function test_it_uses_vite_manifest_assets_when_available(): void
