@@ -92,27 +92,42 @@ HTML);
     public function test_it_serves_direct_generated_files(): void
     {
         $this->writeOutputFile('assets/css/inkstone.css', 'body{}');
+        $this->writeOutputFile('assets/js/inkstone.js', 'console.log("inkstone");');
         $this->writeOutputFile('search-index.json', '{"entries":[]}');
         $this->writeOutputFile('sitemap.xml', '<urlset></urlset>');
         $this->writeOutputFile('robots.txt', "User-agent: *\nAllow: /\n");
 
         \Inkstone::routes();
 
-        $this->get('/docs/assets/css/inkstone.css')
-            ->assertOk()
-            ->assertStreamedContent('body{}');
+        $css = $this->get('/docs/assets/css/inkstone.css')
+            ->assertOk();
 
-        $this->get('/docs/search-index.json')
-            ->assertOk()
-            ->assertStreamedContent('{"entries":[]}');
+        $this->assertStringStartsWith('text/css', (string) $css->headers->get('Content-Type'));
+        $css->assertStreamedContent('body{}');
 
-        $this->get('/docs/sitemap.xml')
-            ->assertOk()
-            ->assertStreamedContent('<urlset></urlset>');
+        $js = $this->get('/docs/assets/js/inkstone.js')
+            ->assertOk();
 
-        $this->get('/docs/robots.txt')
-            ->assertOk()
-            ->assertStreamedContent("User-agent: *\nAllow: /\n");
+        $this->assertStringStartsWith('application/javascript', (string) $js->headers->get('Content-Type'));
+        $js->assertStreamedContent('console.log("inkstone");');
+
+        $json = $this->get('/docs/search-index.json')
+            ->assertOk();
+
+        $this->assertStringStartsWith('application/json', (string) $json->headers->get('Content-Type'));
+        $json->assertStreamedContent('{"entries":[]}');
+
+        $xml = $this->get('/docs/sitemap.xml')
+            ->assertOk();
+
+        $this->assertStringStartsWith('application/xml', (string) $xml->headers->get('Content-Type'));
+        $xml->assertStreamedContent('<urlset></urlset>');
+
+        $text = $this->get('/docs/robots.txt')
+            ->assertOk();
+
+        $this->assertStringStartsWith('text/plain', (string) $text->headers->get('Content-Type'));
+        $text->assertStreamedContent("User-agent: *\nAllow: /\n");
     }
 
     public function test_it_applies_the_configured_route_domain(): void
