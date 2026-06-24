@@ -164,6 +164,7 @@ class InkstoneServiceProvider extends ServiceProvider
             return new Inkstone(
                 $app->make(StaticSiteGenerator::class),
                 $app->make(DocumentationRouteRegistrar::class),
+                $app->make(GeneratedDocumentationFileServer::class),
             );
         });
         $this->app->alias(Inkstone::class, 'inkstone');

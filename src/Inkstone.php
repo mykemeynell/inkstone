@@ -7,12 +7,14 @@ namespace Inkstone;
 use Inkstone\Contracts\StaticSiteGenerator;
 use Inkstone\DTOs\RenderedPage;
 use Inkstone\Routing\DocumentationRouteRegistrar;
+use Inkstone\Services\GeneratedDocumentationFileServer;
 
 final class Inkstone implements StaticSiteGenerator
 {
     public function __construct(
         private readonly StaticSiteGenerator $generator,
         private readonly DocumentationRouteRegistrar $routes,
+        private readonly GeneratedDocumentationFileServer $files,
     ) {}
 
     /**
@@ -26,5 +28,10 @@ final class Inkstone implements StaticSiteGenerator
     public function routes(): void
     {
         $this->routes->register();
+    }
+
+    public function docsBuilt(): bool
+    {
+        return $this->files->resolve('') !== null;
     }
 }
