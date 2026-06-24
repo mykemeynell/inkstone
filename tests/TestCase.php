@@ -34,7 +34,10 @@ class TestCase extends Orchestra
 
     protected function getPackageAliases($app): array
     {
-        return ['DocsGenerator' => DocsGenerator::class];
+        return [
+            'DocsGenerator' => DocsGenerator::class,
+            'Inkstone' => DocsGenerator::class,
+        ];
     }
 
     protected function defineEnvironment($app): void
