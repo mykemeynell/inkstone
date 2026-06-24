@@ -19,7 +19,7 @@
   "require": {
     "php": ">=8.2",
     "ext-dom": "*",
-    "cebe/php-openapi": "^1.8",
+    "devizzent/cebe-php-openapi": "^1.1",
     "illuminate/cache": "^11.0|^12.0|^13.0",
     "illuminate/config": "^11.0|^12.0|^13.0",
     "illuminate/console": "^11.0|^12.0|^13.0",

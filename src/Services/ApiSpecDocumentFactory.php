@@ -32,6 +32,12 @@ final class ApiSpecDocumentFactory
 
     private function readSpec(string $path): OpenApi
     {
+        $resolvedPath = realpath($path);
+
+        if (is_string($resolvedPath)) {
+            $path = $resolvedPath;
+        }
+
         $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
 
         $openApi = match ($extension) {
