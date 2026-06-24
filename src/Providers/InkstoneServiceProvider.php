@@ -32,6 +32,7 @@ use Inkstone\Services\CompositeDocumentDiscoverer;
 use Inkstone\Services\FilesystemDocumentDiscoverer;
 use Inkstone\Services\FileSystemWriter;
 use Inkstone\Services\GeneratedDocumentationFileServer;
+use Inkstone\Services\GeneratedDocumentationUrlRewriter;
 use Inkstone\Services\LocalDocumentationServer;
 use Inkstone\Services\NavigationBuilder;
 use Inkstone\Services\SearchDriverConfig;
@@ -103,6 +104,7 @@ class InkstoneServiceProvider extends ServiceProvider
         $this->app->singleton(DocumentRenderer::class, BladeDocumentRenderer::class);
         $this->app->singleton(FileSystemWriter::class);
         $this->app->singleton(GeneratedDocumentationFileServer::class);
+        $this->app->singleton(GeneratedDocumentationUrlRewriter::class);
         $this->app->singleton(DocumentationRouteRegistrar::class);
         $this->app->singleton(LocalDocumentationServer::class);
         $this->app->singleton(DemoRendererRegistry::class);

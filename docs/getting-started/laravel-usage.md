@@ -70,7 +70,7 @@ use Inkstone\Facades\DocsGenerator as Inkstone;
 Inkstone::routes();
 ```
 
-By default, this serves the generated files from `/docs`. If you keep that default, set `site.base_url` to `/docs` before running `docs:build` so generated asset and internal links match the mounted path.
+By default, this serves the generated files from `/docs`. When serving through Laravel, Inkstone adjusts generated root-relative URLs to the configured route path without changing the static files written by `docs:build`.
 
 You can change the mounted domain, path, and additional middleware in `config/inkstone.php` under the `routes` key.
 

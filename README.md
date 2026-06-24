@@ -48,7 +48,7 @@ use Inkstone\Facades\DocsGenerator as Inkstone;
 Inkstone::routes();
 ```
 
-The default route path is `/docs`. Set `site.base_url` to `/docs` before building when serving from that path.
+The default route path is `/docs`. When serving through Laravel, Inkstone adjusts generated root-relative URLs to the configured route path without changing static-host builds.
 
 ## Configuration
 

@@ -38,7 +38,44 @@ final class RouteServingTest extends TestCase
 
         $this->get('/docs')
             ->assertOk()
-            ->assertStreamedContent('<h1>Generated Docs</h1>');
+            ->assertSee('<h1>Generated Docs</h1>', false);
+    }
+
+    public function test_it_rewrites_root_relative_generated_urls_to_the_route_path(): void
+    {
+        config()->set('inkstone.site.base_url', '');
+
+        $this->writeOutputFile('index.html', <<<'HTML'
+<!doctype html>
+<html>
+<head>
+    <link rel="stylesheet" href="/assets/css/inkstone.css">
+    <script src="/assets/js/inkstone.js"></script>
+</head>
+<body>
+    <a href="/">Home</a>
+    <a href="/getting-started">Getting Started</a>
+    <a href="/login">Application Login</a>
+    <input data-inkstone-search-index="/search-index.json">
+</body>
+</html>
+HTML);
+        $this->writeOutputFile('assets/css/inkstone.css', 'body{}');
+        $this->writeOutputFile('assets/js/inkstone.js', 'console.log("inkstone");');
+        $this->writeOutputFile('getting-started/index.html', '<h1>Getting Started</h1>');
+        $this->writeOutputFile('search-index.json', '{"entries":[]}');
+
+        \Inkstone::routes();
+
+        $response = $this->get('/docs')->assertOk();
+        $html = $response->getContent();
+
+        $this->assertStringContainsString('href="/docs/assets/css/inkstone.css"', $html);
+        $this->assertStringContainsString('src="/docs/assets/js/inkstone.js"', $html);
+        $this->assertStringContainsString('href="/docs"', $html);
+        $this->assertStringContainsString('href="/docs/getting-started"', $html);
+        $this->assertStringContainsString('data-inkstone-search-index="/docs/search-index.json"', $html);
+        $this->assertStringContainsString('href="/login"', $html);
     }
 
     public function test_it_serves_nested_pretty_url_pages(): void
@@ -49,7 +86,7 @@ final class RouteServingTest extends TestCase
 
         $this->get('/docs/getting-started/installation')
             ->assertOk()
-            ->assertStreamedContent('<h1>Installation</h1>');
+            ->assertSee('<h1>Installation</h1>', false);
     }
 
     public function test_it_serves_direct_generated_files(): void
@@ -88,7 +125,7 @@ final class RouteServingTest extends TestCase
 
         $this->get('http://docs.example.test/docs')
             ->assertOk()
-            ->assertStreamedContent('<h1>Domain Docs</h1>');
+            ->assertSee('<h1>Domain Docs</h1>', false);
 
         $this->get('http://example.test/docs')->assertNotFound();
     }
@@ -121,7 +158,7 @@ final class RouteServingTest extends TestCase
 
         $this->get('/')
             ->assertOk()
-            ->assertStreamedContent('<h1>Root Docs</h1>');
+            ->assertSee('<h1>Root Docs</h1>', false);
     }
 
     private function writeOutputFile(string $path, string $contents): void

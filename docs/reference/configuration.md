@@ -57,7 +57,7 @@ The footer can be disabled or customized from `site.footer`. Set `site.show_titl
 
 Call `Inkstone::routes()` from `routes/web.php` to serve generated output from the Laravel application. `routes.path` controls the mount path, `routes.domain` restricts docs to a specific host, and `routes.middleware` adds middleware only for the documentation routes.
 
-The route server reads from `output_path` and does not build docs during requests. Keep `site.base_url` aligned with the route path before running `docs:build`, for example `/docs` when `routes.path` is `docs`.
+The route server reads from `output_path` and does not build docs during requests. When serving through Laravel, Inkstone adjusts generated root-relative URLs to the configured route path. Use `site.base_url` for static-host deployments where the generated files themselves need a deploy path such as `/my-package`.
 
 ## Theme
 

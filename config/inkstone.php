@@ -38,8 +38,8 @@ return [
     |
     | Call Inkstone::routes() from routes/web.php to serve the generated docs
     | from this Laravel application. The route server reads from output_path and
-    | does not rebuild docs during requests. When serving from a path such as
-    | /docs, set site.base_url to the same path before running docs:build.
+    | does not rebuild docs during requests. Root-relative generated URLs are
+    | adjusted to the configured route path while serving through Laravel.
     |
     */
 
