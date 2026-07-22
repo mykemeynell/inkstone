@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.3.0](https://github.com/mykemeynell/inkstone/compare/v1.2.0...v1.3.0) (2026-07-22)
+
+
+### Features
+
+* add OpenAPI specification parsing to the documentation pipeline ([bd7b49f](https://github.com/mykemeynell/inkstone/commit/bd7b49f4841df2fcef016407d8106efa38551601))
+* **facade:** add docs built status check ([cb34e39](https://github.com/mykemeynell/inkstone/commit/cb34e395d78876efbc50ce47c7c9d21a1ba22edf))
+* openapi specification parsing ([8c665f2](https://github.com/mykemeynell/inkstone/commit/8c665f2c2ed93b492622c35de83bc67281f6b30d))
+* **routes:** serve generated docs from Laravel routes ([6e61180](https://github.com/mykemeynell/inkstone/commit/6e61180e7de7837e3d4997281ce66c350aa0ae69))
+
+
+### Bug Fixes
+
+* **api:** use maintained OpenAPI parser fork ([c216e6d](https://github.com/mykemeynell/inkstone/commit/c216e6dc3d08db9282c875304a321cdaea20bbea))
+* **routes:** cover route-served docs asset contracts ([44dff41](https://github.com/mykemeynell/inkstone/commit/44dff410632b0cab249c6613d69fa01e184805ad))
+* **routes:** rewrite generated asset URLs when mounted ([f8ac0a0](https://github.com/mykemeynell/inkstone/commit/f8ac0a078e7d788fb1f94905c50ba1c63fdd2509))
+* **routes:** rewrite served search result urls ([80c56bf](https://github.com/mykemeynell/inkstone/commit/80c56bfaf04e75e1b7f602e3831712c585dd68b7))
+* **routes:** set MIME types for served assets ([7ebefa9](https://github.com/mykemeynell/inkstone/commit/7ebefa961d7aed47dbd0bb8ed4dc5101d923d463))
+
+
+### Miscellaneous Chores
+
+* remove Laravel 11 from testing requirements. ([1f5f129](https://github.com/mykemeynell/inkstone/commit/1f5f129625597203e0330438060fb32c4056f02a))
+
 ## [1.2.0](https://github.com/mykemeynell/inkstone/compare/v1.1.0...v1.2.0) (2026-06-01)
 
 
