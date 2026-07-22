@@ -6,6 +6,7 @@ use Inkstone\Search\AlgoliaSearchIndexer;
 use Inkstone\Search\JsonSearchIndexer;
 use Inkstone\Search\LunrSearchIndexer;
 use Inkstone\Search\TypesenseSearchIndexer;
+use Inkstone\Transformers\ApiHtmlTransformer;
 use Inkstone\Transformers\BaseUrlLinkTransformer;
 use Inkstone\Transformers\DemoBlockTransformer;
 use Inkstone\Transformers\ExternalLinkTransformer;
@@ -29,6 +30,39 @@ return [
     'source_path' => base_path('docs'),
 
     'output_path' => base_path('build/docs'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Laravel Routes
+    |--------------------------------------------------------------------------
+    |
+    | Call Inkstone::routes() from routes/web.php to serve the generated docs
+    | from this Laravel application. The route server reads from output_path and
+    | does not rebuild docs during requests. Root-relative generated URLs are
+    | adjusted to the configured route path while serving through Laravel.
+    |
+    */
+
+    'routes' => [
+
+        'domain' => env('INKSTONE_ROUTE_DOMAIN'),
+
+        'path' => env('INKSTONE_ROUTE_PATH', 'docs'),
+
+        /*
+        |--------------------------------------------------------------------------
+        | Additional Route Middleware
+        |--------------------------------------------------------------------------
+        |
+        | Add only middleware that should apply specifically to the documentation
+        | routes. Routes defined in routes/web.php already run in Laravel's web
+        | middleware group.
+        |
+        */
+
+        'middleware' => [],
+
+    ],
 
     /*
     |--------------------------------------------------------------------------
@@ -317,6 +351,33 @@ return [
     |--------------------------------------------------------------------------
     */
 
+    /*
+    |--------------------------------------------------------------------------
+    | API Documentation
+    |--------------------------------------------------------------------------
+    |
+    | When enabled, Inkstone will auto-discover OpenAPI spec files (openapi.yaml,
+    | openapi.yml, openapi.json) in your documentation source directory and render
+    | them as browsable API reference pages alongside your Markdown guides.
+    |
+    */
+
+    'api' => [
+
+        'enabled' => true,
+
+        'spec_filenames' => [
+            'openapi.yaml',
+            'openapi.yml',
+            'openapi.json',
+        ],
+
+        'base_path' => 'api',
+
+        'generate_code_examples' => true,
+
+    ],
+
     'transformers' => [
         HeadingAnchorTransformer::class,
         ExternalLinkTransformer::class,
@@ -324,6 +385,7 @@ return [
         GitHubRelativeLinkTransformer::class,
         DemoBlockTransformer::class,
         SyntaxHighlightTransformer::class,
+        ApiHtmlTransformer::class,
     ],
 
 ];

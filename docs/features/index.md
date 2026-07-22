@@ -25,5 +25,6 @@ The generated site does not require a server, database, queue, authentication, o
 - [Search](/features/search)
 - [Demo Blocks](/features/demo-blocks)
 - [Images](/features/images)
+- [API Specifications](/features/api-specifications)
 - [AI Assisted Docs](/features/ai-assisted-docs)
 - [Laravel Boost Integration](/features/laravel-boost)

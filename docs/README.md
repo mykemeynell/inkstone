@@ -44,6 +44,7 @@ Both workflows use the same package services. The standalone CLI boots a small I
 - Automatic grouped sidebar navigation
 - Sticky "On this page" navigation
 - Heading anchors with copyable heading URLs
+- OpenAPI specification auto-discovery and rendering
 - GitHub relative link and image rewriting
 - Phiki-powered syntax highlighting
 - Copy buttons for code and demo source blocks
@@ -85,6 +86,7 @@ php artisan docs:build
 - [Configuration](/configuration) lists the main configuration sections.
 - [Markdown Rendering](/features/markdown) shows supported Markdown and demo blocks.
 - [Themes](/features/themes) covers built-in styling, overrides, and theme variants.
+- [API Specifications](/features/api-specifications) covers OpenAPI spec discovery and rendering.
 - [AI Assisted Docs](/features/ai-assisted-docs) explains the reusable prompt workflow.
 - [Laravel Boost Integration](/features/laravel-boost) explains the optional Boost resources for Laravel apps.
 - [Commands](/reference/commands) lists every command and option.

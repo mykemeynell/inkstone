@@ -45,6 +45,20 @@ This page lists the main `inkstone` configuration keys.
 
 The footer can be disabled or customized from `site.footer`. Set `site.show_title` to `false` to hide the site title from the header brand. `site.footer.repository.url` controls the repository link shown next to the footer text; omit or set to an empty string to remove it. `site.footer.repository.label` customises the link text.
 
+## Laravel Routes
+
+```php
+'routes' => [
+    'domain' => env('INKSTONE_ROUTE_DOMAIN'),
+    'path' => env('INKSTONE_ROUTE_PATH', 'docs'),
+    'middleware' => [],
+],
+```
+
+Call `Inkstone::routes()` from `routes/web.php` to serve generated output from the Laravel application. `routes.path` controls the mount path, `routes.domain` restricts docs to a specific host, and `routes.middleware` adds middleware only for the documentation routes.
+
+The route server reads from `output_path` and does not build docs during requests. When serving through Laravel, Inkstone adjusts generated root-relative URLs to the configured route path. Use `site.base_url` for static-host deployments where the generated files themselves need a deploy path such as `/my-package`.
+
 ## Theme
 
 ```php
@@ -187,6 +201,25 @@ Relative repository links are rewritten to raw GitHub URLs.
 ```
 
 Demo blocks are static build-time examples. `describe_void_output` controls whether void demo output is described textually. `use_disposable_database` creates an in-memory SQLite database per demo. `database` configures the database connection. `show_stack_traces` controls stack trace rendering for demo exceptions.
+
+## API
+
+```php
+'api' => [
+    'enabled' => true,
+    'spec_filenames' => [
+        'openapi.yaml',
+        'openapi.yml',
+        'openapi.json',
+    ],
+    'base_path' => 'api',
+    'generate_code_examples' => true,
+],
+```
+
+When `enabled`, Inkstone searches the documentation source directory for files matching `spec_filenames`. Each discovered spec is parsed by `cebe/php-openapi` and rendered as an API reference page under the `base_path` URL prefix. The generated page includes endpoint groups by tag, parameter tables, request body schemas, response codes, and component schemas.
+
+Set `enabled` to `false` or use the `--no-api` CLI flag to disable API documentation for a build.
 
 ## Local Server
 

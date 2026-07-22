@@ -46,7 +46,7 @@ final class StaticDocumentationGenerator implements StaticSiteGenerator
         $this->discoverSourceBrandAssets($outputPath);
 
         $documents = array_map(
-            fn (Document $document): Document => $this->transformers->process($this->parser->parse($document)),
+            fn (Document $document): Document => $this->processDocument($document),
             $this->discoverer->discover(),
         );
 
@@ -70,6 +70,15 @@ final class StaticDocumentationGenerator implements StaticSiteGenerator
         $this->copyAssets($outputPath);
 
         return $pages;
+    }
+
+    private function processDocument(Document $document): Document
+    {
+        if (isset($document->metadata['_api_spec'])) {
+            return $this->transformers->process($document);
+        }
+
+        return $this->transformers->process($this->parser->parse($document));
     }
 
     /**

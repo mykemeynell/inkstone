@@ -1,0 +1,120 @@
+openapi: 3.0.0
+info:
+  title: Users API
+  version: 1.0.0
+  description: A simple API for managing users.
+servers:
+  - url: https://api.example.com/v1
+    description: Production
+tags:
+  - name: Users
+    description: User management endpoints
+paths:
+  /users:
+    get:
+      operationId: listUsers
+      summary: List all users
+      description: Returns a paginated list of users.
+      tags:
+        - Users
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: Page number
+        - name: per_page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 15
+          description: Items per page
+      responses:
+        '200':
+          description: A paginated list of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+    post:
+      operationId: createUser
+      summary: Create a new user
+      description: Creates a user with the provided data.
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUser'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '422':
+          description: Validation error
+  /users/{id}:
+    get:
+      operationId: getUser
+      summary: Get a user by ID
+      description: Returns a single user by their ID.
+      tags:
+        - Users
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: The user ID
+      responses:
+        '200':
+          description: A single user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+components:
+  schemas:
+    User:
+      type: object
+      description: A user resource
+      properties:
+        id:
+          type: integer
+          description: The unique identifier
+        name:
+          type: string
+          description: The user's full name
+        email:
+          type: string
+          format: email
+          description: The user's email address
+      required:
+        - id
+        - name
+        - email
+    CreateUser:
+      type: object
+      description: Payload for creating a new user
+      properties:
+        name:
+          type: string
+          description: The user's full name
+        email:
+          type: string
+          format: email
+          description: The user's email address
+      required:
+        - name
+        - email

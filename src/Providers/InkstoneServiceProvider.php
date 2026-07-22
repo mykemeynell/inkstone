@@ -21,12 +21,18 @@ use Inkstone\Demos\DemoRendererRegistry;
 use Inkstone\Demos\DemoRuntimeResolver;
 use Inkstone\Demos\SimpleDemoRuntime;
 use Inkstone\Generators\StaticDocumentationGenerator;
+use Inkstone\Inkstone;
 use Inkstone\Parsers\CommonMarkMarkdownParser;
 use Inkstone\Pipelines\TransformerPipeline;
 use Inkstone\Renderers\BladeDocumentRenderer;
+use Inkstone\Routing\DocumentationRouteRegistrar;
+use Inkstone\Services\ApiSpecDiscoverer;
 use Inkstone\Services\AssetManifest;
+use Inkstone\Services\CompositeDocumentDiscoverer;
 use Inkstone\Services\FilesystemDocumentDiscoverer;
 use Inkstone\Services\FileSystemWriter;
+use Inkstone\Services\GeneratedDocumentationFileServer;
+use Inkstone\Services\GeneratedDocumentationUrlRewriter;
 use Inkstone\Services\LocalDocumentationServer;
 use Inkstone\Services\NavigationBuilder;
 use Inkstone\Services\SearchDriverConfig;
@@ -45,13 +51,36 @@ class InkstoneServiceProvider extends ServiceProvider
 
         $this->app->singleton(Filesystem::class);
 
-        $this->app->singleton(DocumentDiscoverer::class, function (): DocumentDiscoverer {
+        $this->app->singleton(FilesystemDocumentDiscoverer::class, function (): FilesystemDocumentDiscoverer {
             return new FilesystemDocumentDiscoverer(
                 (string) config('inkstone.source_path'),
                 (string) config('inkstone.site.base_url', ''),
                 (bool) config('inkstone.build.pretty_urls', true),
                 (array) config('inkstone.discovery.ignore', []),
             );
+        });
+
+        $this->app->singleton(ApiSpecDiscoverer::class, function (): ApiSpecDiscoverer {
+            $specPath = config('inkstone.api.spec_path');
+
+            return new ApiSpecDiscoverer(
+                (string) config('inkstone.source_path'),
+                (array) config('inkstone.api.spec_filenames', ['openapi.yaml']),
+                is_string($specPath) && $specPath !== '' ? $specPath : null,
+                (string) config('inkstone.site.base_url', ''),
+                (string) config('inkstone.api.base_path', 'api'),
+                (bool) config('inkstone.build.pretty_urls', true),
+            );
+        });
+
+        $this->app->singleton(DocumentDiscoverer::class, function ($app): DocumentDiscoverer {
+            $discoverers = [$app->make(FilesystemDocumentDiscoverer::class)];
+
+            if ((bool) config('inkstone.api.enabled', true)) {
+                $discoverers[] = $app->make(ApiSpecDiscoverer::class);
+            }
+
+            return new CompositeDocumentDiscoverer($discoverers);
         });
 
         $this->app->singleton(MarkdownParser::class, function (): MarkdownParser {
@@ -74,6 +103,9 @@ class InkstoneServiceProvider extends ServiceProvider
         $this->app->singleton(AssetManifest::class);
         $this->app->singleton(DocumentRenderer::class, BladeDocumentRenderer::class);
         $this->app->singleton(FileSystemWriter::class);
+        $this->app->singleton(GeneratedDocumentationFileServer::class);
+        $this->app->singleton(GeneratedDocumentationUrlRewriter::class);
+        $this->app->singleton(DocumentationRouteRegistrar::class);
         $this->app->singleton(LocalDocumentationServer::class);
         $this->app->singleton(DemoRendererRegistry::class);
         $this->app->singleton(DemoRuntimeResolver::class, function (): DemoRuntimeResolver {
@@ -128,7 +160,14 @@ class InkstoneServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(StaticSiteGenerator::class, StaticDocumentationGenerator::class);
-        $this->app->alias(StaticSiteGenerator::class, 'inkstone');
+        $this->app->singleton(Inkstone::class, function ($app): Inkstone {
+            return new Inkstone(
+                $app->make(StaticSiteGenerator::class),
+                $app->make(DocumentationRouteRegistrar::class),
+                $app->make(GeneratedDocumentationFileServer::class),
+            );
+        });
+        $this->app->alias(Inkstone::class, 'inkstone');
     }
 
     private function transformerClass(int|string $key, mixed $value): ?string

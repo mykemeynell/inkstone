@@ -24,6 +24,8 @@ Useful options:
 - `--output=build/docs` sets the generated static site directory.
 - `--base-url=/docs` sets the base URL when the generated site is mounted below a subdirectory.
 - `--config=inkstone.php` loads an optional PHP config file and merges it over the defaults.
+- `--api-spec=path/to/openapi.yaml` includes an OpenAPI specification file in the generated documentation.
+- `--no-api` disables API documentation generation for this build.
 
 ## Laravel Usage
 
@@ -37,6 +39,16 @@ php artisan docs:clean
 ```
 
 `docs:install` publishes Inkstone configuration, starter docs, theme assets, and deployment examples. `docs:build` writes deployable static HTML into `build/docs` by default.
+
+To serve the generated output from the Laravel application, add the route macro to `routes/web.php`:
+
+```php
+use Inkstone\Facades\DocsGenerator as Inkstone;
+
+Inkstone::routes();
+```
+
+The default route path is `/docs`. When serving through Laravel, Inkstone adjusts generated root-relative URLs to the configured route path without changing static-host builds.
 
 ## Configuration
 
