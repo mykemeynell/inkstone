@@ -53,17 +53,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Laravel 11
-          - php: "8.2"
-            laravel: "^11.0"
-            testbench: "^9.0"
-          - php: "8.3"
-            laravel: "^11.0"
-            testbench: "^9.0"
-          - php: "8.4"
-            laravel: "^11.0"
-            testbench: "^9.0"
-
           # Laravel 12
           - php: "8.2"
             laravel: "^12.0"

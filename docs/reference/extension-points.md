@@ -12,12 +12,21 @@ Commands should stay thin. Package behavior lives in services, parsers, transfor
 ## Pipeline Overview
 
 ```text
-DocumentDiscoverer
-    -> MarkdownParser
-    -> TransformerPipeline
-    -> NavigationBuilder
-    -> DocumentRenderer
-    -> StaticSiteGenerator
+CompositeDocumentDiscoverer
+    ├── FilesystemDocumentDiscoverer (Markdown files)
+    └── ApiSpecDiscoverer (OpenAPI spec files)
+         -> MarkdownParser (skipped for API documents)
+         -> TransformerPipeline
+             ├── HeadingAnchorTransformer
+             ├── ExternalLinkTransformer
+             ├── BaseUrlLinkTransformer
+             ├── GitHubRelativeLinkTransformer
+             ├── DemoBlockTransformer
+             ├── SyntaxHighlightTransformer
+             └── ApiHtmlTransformer (generates API page HTML)
+         -> NavigationBuilder
+         -> DocumentRenderer
+         -> StaticSiteGenerator
 ```
 
 ## Core DTOs
@@ -36,7 +45,7 @@ DocumentDiscoverer
 
 | Contract | Responsibility |
 | --- | --- |
-| `DocumentDiscoverer` | Find Markdown files and create `Document` DTOs |
+| `DocumentDiscoverer` | Find documentation sources and create `Document` DTOs |
 | `MarkdownParser` | Parse frontmatter, headings, Markdown HTML, and AST |
 | `Transformer` | Transform a parsed `Document` |
 | `NavigationBuilder` | Build sidebar navigation for a document set |
@@ -50,7 +59,9 @@ DocumentDiscoverer
 
 | Service | Contract |
 | --- | --- |
-| `FilesystemDocumentDiscoverer` | `DocumentDiscoverer` |
+| `CompositeDocumentDiscoverer` | `DocumentDiscoverer` (aggregates all discoverers) |
+| `FilesystemDocumentDiscoverer` | Markdown file discovery (child of composite) |
+| `ApiSpecDiscoverer` | OpenAPI spec file discovery (child of composite) |
 | `CommonMarkMarkdownParser` | `MarkdownParser` |
 | `NavigationBuilder` | `NavigationBuilder` |
 | `BladeDocumentRenderer` | `DocumentRenderer` |
@@ -66,9 +77,11 @@ Default transformers are configured in order:
 'transformers' => [
     HeadingAnchorTransformer::class,
     ExternalLinkTransformer::class,
+    BaseUrlLinkTransformer::class,
     GitHubRelativeLinkTransformer::class,
     DemoBlockTransformer::class,
     SyntaxHighlightTransformer::class,
+    ApiHtmlTransformer::class,
 ],
 ```
 

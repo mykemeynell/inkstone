@@ -10,8 +10,9 @@ parameters:
     # Level 10 is the highest level
     level: 5
 
-#    ignoreErrors:
-#        - '#PHPDoc tag @var#'
-#
-#    excludePaths:
-#        - ./*/*/FileToBeExcluded.php
+    ignoreErrors:
+        - '#Instanceof between cebe\\openapi\\spec\\(OpenApi|PathItem|Operation).*will always evaluate to true#'
+        - '#Strict comparison using .* between array.* and null will always evaluate to (false|true)#'
+
+    excludePaths:
+        - ./*/*/FileToBeExcluded.php

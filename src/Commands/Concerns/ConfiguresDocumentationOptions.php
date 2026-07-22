@@ -49,6 +49,27 @@ trait ConfiguresDocumentationOptions
         if ((bool) $this->documentationOption('warn-broken-links')) {
             config()->set('inkstone.build.check_links_level', 'warn');
         }
+
+        $apiSpec = $this->documentationOption('api-spec');
+
+        if (is_string($apiSpec) && $apiSpec !== '') {
+            $absolutePath = $this->absolutePath($apiSpec);
+
+            if (is_file($absolutePath)) {
+                config()->set('inkstone.api.spec_filenames', [basename($absolutePath)]);
+
+                $specDir = dirname($absolutePath);
+
+                if ($specDir !== (string) config('inkstone.source_path')) {
+                    $specDir = rtrim($specDir, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR;
+                    config()->set('inkstone.api.spec_path', $specDir);
+                }
+            }
+        }
+
+        if ((bool) $this->documentationOption('no-api')) {
+            config()->set('inkstone.api.enabled', false);
+        }
     }
 
     private function absolutePath(string $path): string

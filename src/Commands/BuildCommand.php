@@ -19,7 +19,9 @@ final class BuildCommand extends Command
         {--base-url= : Base URL used by generated documentation links}
         {--config= : Optional Inkstone PHP config file}
         {--no-check-links : Disable internal link validation}
-        {--warn-broken-links : Report broken links without failing the build}';
+        {--warn-broken-links : Report broken links without failing the build}
+        {--api-spec= : Path to an OpenAPI spec file to include in the documentation}
+        {--no-api : Disable API documentation generation}';
 
     protected $description = 'Build the static Inkstone documentation site.';
 

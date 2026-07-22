@@ -19,11 +19,12 @@ Use the standalone Composer binary in package repositories or projects that do n
 vendor/bin/inkstone docs:build --source=docs --output=build/docs
 </code-snippet>
 
-Both workflows use the same configuration conventions. Laravel apps read `config/inkstone.php` through the `inkstone` config key. Standalone builds can pass command options such as `--source`, `--output`, `--base-url`, and `--config`.
+Both workflows use the same configuration conventions. Laravel apps read `config/inkstone.php` through the `inkstone` config key. Standalone builds can pass command options such as `--source`, `--output`, `--base-url`, `--config`, and `--api-spec`.
 
 ### Documentation Structure
 
 - Put source Markdown in `docs/` by default.
+- Place OpenAPI specification files (`openapi.yaml`, `openapi.yml`, `openapi.json`) in `docs/` for automatic API reference page generation.
 - Use `docs/README.md` for the introduction page.
 - Use a folder `index.md` to control a navigation group title and order.
 - Add YAML frontmatter to pages that need explicit navigation labels or ordering:
@@ -44,6 +45,8 @@ order: 1
 - Search is client-side and generated as `search-index.json`.
 - Theme customizations should use the published Blade views, CSS variables, and theme assets.
 - Demo fences such as `demo:php`, `demo:markdown`, and `demo:html` are rendered at build time only.
+- OpenAPI specification files in `docs/` are parsed and rendered as API reference pages at build time.
+- Use `--no-api` to skip API documentation for a build.
 - Do not add SaaS features, authentication, database-backed app state, AI search, CMS features, marketplaces, or live playgrounds unless the host project already implements them.
 
 ### Verification
