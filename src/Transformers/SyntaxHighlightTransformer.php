@@ -121,7 +121,36 @@ final class SyntaxHighlightTransformer implements Transformer
 
         $imported = $target->document->importNode($pre, true);
 
-        return $imported instanceof DOMElement ? $imported : null;
+        if (! $imported instanceof DOMElement) {
+            return null;
+        }
+
+        $this->normalizePhikiStyles($imported);
+
+        return $imported;
+    }
+
+    private function normalizePhikiStyles(DOMElement $root): void
+    {
+        $this->normalizeStyleAttribute($root);
+
+        foreach ($root->getElementsByTagName('*') as $element) {
+            $this->normalizeStyleAttribute($element);
+        }
+    }
+
+    private function normalizeStyleAttribute(DOMElement $element): void
+    {
+        if (! $element->hasAttribute('style')) {
+            return;
+        }
+
+        $declarations = array_values(array_filter(
+            array_map('trim', explode(';', $element->getAttribute('style'))),
+            static fn (string $declaration): bool => $declaration !== '',
+        ));
+
+        $element->setAttribute('style', $declarations !== [] ? implode(';', $declarations).';' : '');
     }
 
     private function phikiLanguage(string $language): string

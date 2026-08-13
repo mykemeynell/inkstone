@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace Inkstone\Generators;
 
+use Illuminate\Container\Container;
 use Inkstone\Contracts\DocumentDiscoverer;
 use Inkstone\Contracts\DocumentRenderer;
 use Inkstone\Contracts\MarkdownParser;
 use Inkstone\Contracts\NavigationBuilder;
 use Inkstone\Contracts\SearchIndexer;
 use Inkstone\Contracts\StaticSiteGenerator;
+use Inkstone\DTOs\BuildContext;
 use Inkstone\DTOs\Document;
 use Inkstone\DTOs\NavigationItem;
+use Inkstone\Extensions\BuildExtensionPipeline;
 use Inkstone\Pipelines\TransformerPipeline;
 use Inkstone\Services\AssetManifest;
 use Inkstone\Services\FileSystemWriter;
@@ -30,6 +33,7 @@ final class StaticDocumentationGenerator implements StaticSiteGenerator
         private readonly FileSystemWriter $writer,
         private readonly AssetManifest $assets,
         private readonly LinkChecker $linkChecker,
+        private readonly ?BuildExtensionPipeline $extensions = null,
     ) {}
 
     public function build(): array
@@ -68,8 +72,20 @@ final class StaticDocumentationGenerator implements StaticSiteGenerator
         $this->writeSearchIndex($documents, $outputPath, $sectionMap);
         $this->writeStaticMetadata($documents, $outputPath);
         $this->copyAssets($outputPath);
+        $this->extensionPipeline()->run(new BuildContext($documents, $pages, $outputPath));
 
         return $pages;
+    }
+
+    private function extensionPipeline(): BuildExtensionPipeline
+    {
+        $container = Container::getInstance();
+
+        if (! $container->bound(\Illuminate\Contracts\Container\Container::class)) {
+            $container->instance(\Illuminate\Contracts\Container\Container::class, $container);
+        }
+
+        return $this->extensions ?? new BuildExtensionPipeline($container);
     }
 
     private function processDocument(Document $document): Document
@@ -164,12 +180,6 @@ final class StaticDocumentationGenerator implements StaticSiteGenerator
      */
     private function writeStaticMetadata(array $documents, string $outputPath): void
     {
-        if ((bool) config('inkstone.build.generate_sitemap', true)) {
-            $base = (string) config('inkstone.site.base_url', '');
-            $urls = array_map(static fn (Document $document): string => '  <url><loc>'.e(UrlBuilder::to($base, $document->slug)).'</loc></url>', $documents);
-            $this->writer->write($outputPath.'/sitemap.xml', "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n".implode("\n", $urls)."\n</urlset>\n");
-        }
-
         if ((bool) config('inkstone.build.generate_robots_txt', true)) {
             $this->writer->write($outputPath.'/robots.txt', "User-agent: *\nAllow: /\n");
         }

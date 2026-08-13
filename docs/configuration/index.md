@@ -5,7 +5,7 @@ order: 2
 
 # Configuration
 
-Inkstone works without configuration, but configuration lets you customize paths, branding, GitHub rewriting, search, themes, syntax highlighting, demo blocks, and generated metadata.
+Inkstone works without configuration, but configuration lets you customize paths, branding, GitHub rewriting, search, themes, syntax highlighting, demo blocks, generated metadata, and post-build extensions.
 
 ## Configuration Files
 
@@ -183,3 +183,17 @@ Order matters. Demo blocks are expanded before syntax highlighting so generated 
 `BaseUrlLinkTransformer` rewrites root-relative links to include the configured `base_url`. It runs before `GitHubRelativeLinkTransformer` so relative links are handled independently.
 
 `ApiHtmlTransformer` runs last. It converts OpenAPI specification metadata into structured HTML. API documents skip the Markdown parser — the transformer generates endpoint cards, parameter tables, and schema documentation directly.
+
+## Build Extensions
+
+Build extensions run in configuration order after Inkstone has written its core output. The bundled sitemap extension is enabled by default:
+
+```php
+use Inkstone\Extensions\SitemapExtension;
+
+'extensions' => [
+    SitemapExtension::class,
+],
+```
+
+Add application-specific extensions to this ordered list. Keep `SitemapExtension::class` in the list when the build should generate `sitemap.xml`. See [Extension Points](/reference/extension-points) for the contract and dependency-injection example.

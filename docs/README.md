@@ -21,6 +21,7 @@ Markdown files
     -> navigation builder
     -> Blade theme renderer
     -> static output
+    -> build extensions
 ```
 
 The generated site includes HTML pages, theme assets, a client-side search index, optional sitemap and robots files, and any configured static assets.
@@ -50,6 +51,8 @@ Both workflows use the same package services. The standalone CLI boots a small I
 - Copy buttons for code and demo source blocks
 - Static build-time demo blocks
 - Client-side search with typo-tolerant ranking
+- Sitemap generation with Laravel sitemap-index integration
+- Ordered, container-resolved post-build extensions
 - AI documentation prompt generation
 - Optional Laravel Boost guidelines and documentation skill
 - Responsive Blade theme with dark, light, and system modes
@@ -87,6 +90,7 @@ php artisan docs:build
 - [Markdown Rendering](/features/markdown) shows supported Markdown and demo blocks.
 - [Themes](/features/themes) covers built-in styling, overrides, and theme variants.
 - [API Specifications](/features/api-specifications) covers OpenAPI spec discovery and rendering.
+- [Sitemaps](/features/sitemaps) covers canonical URLs, generated sitemap output, and parent application integration.
 - [AI Assisted Docs](/features/ai-assisted-docs) explains the reusable prompt workflow.
 - [Laravel Boost Integration](/features/laravel-boost) explains the optional Boost resources for Laravel apps.
 - [Commands](/reference/commands) lists every command and option.

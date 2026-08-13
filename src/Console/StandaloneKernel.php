@@ -24,6 +24,7 @@ use Inkstone\Commands\CleanCommand;
 use Inkstone\Commands\InstallCommand;
 use Inkstone\Commands\ServeCommand;
 use Inkstone\Providers\InkstoneServiceProvider;
+use Inkstone\Support\InkstoneConfigMerger;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -138,7 +139,7 @@ final class StandaloneKernel
             $loaded = require $path;
 
             if (is_array($loaded)) {
-                $config->set('inkstone', array_replace_recursive((array) $config->get('inkstone', []), $loaded));
+                $config->set('inkstone', InkstoneConfigMerger::merge((array) $config->get('inkstone', []), $loaded));
             }
         }
 

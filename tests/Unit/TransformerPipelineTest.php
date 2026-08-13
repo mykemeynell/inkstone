@@ -62,6 +62,15 @@ final class TransformerPipelineTest extends TestCase
         $this->assertStringContainsString('data-line="2"', $document->html);
         $this->assertStringContainsString('is-highlighted', $document->html);
         $this->assertStringContainsString('class="token"', $document->html);
+        $this->assertStringContainsString(
+            'style="background-color: #fff;color: #24292e;--phiki-dark-background-color: #24292e;--phiki-dark-color: #e1e4e8;"',
+            $document->html,
+        );
+        $this->assertStringContainsString(
+            'style="color: #005cc5;--phiki-dark-color: #79b8ff;"',
+            $document->html,
+        );
+        $this->assertStringNotContainsString(';;', $document->html);
     }
 
     public function test_provider_loads_transformers_from_configuration(): void
