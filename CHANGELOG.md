@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/mykemeynell/inkstone/compare/v1.3.0...v1.4.0) (2026-08-13)
+
+
+### Features
+
+* extensions ([#11](https://github.com/mykemeynell/inkstone/issues/11)) ([481c2ed](https://github.com/mykemeynell/inkstone/commit/481c2ed4bd55c40977871eedb247481198abccea))
+
 ## [1.3.0](https://github.com/mykemeynell/inkstone/compare/v1.2.0...v1.3.0) (2026-07-22)
 
 
