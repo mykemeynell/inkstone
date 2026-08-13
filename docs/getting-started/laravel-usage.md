@@ -51,6 +51,7 @@ The most common keys are:
 - `github`
 - `search`
 - `demos`
+- `extensions`
 
 ## Build Static Documentation
 
@@ -73,6 +74,31 @@ Inkstone::routes();
 By default, this serves the generated files from `/docs`. When serving through Laravel, Inkstone adjusts generated root-relative URLs to the configured route path without changing the static files written by `docs:build`.
 
 You can change the mounted domain, path, and additional middleware in `config/inkstone.php` under the `routes` key.
+
+## Include The Documentation Sitemap
+
+The bundled `SitemapExtension` writes `sitemap.xml` during `docs:build`. Resolve the same extension from Laravel's container to obtain the URL served by the documentation route:
+
+```php
+use Inkstone\Extensions\SitemapExtension;
+
+$documentationSitemapUrl = app(SitemapExtension::class)->url();
+```
+
+Add the returned URL to the parent application's sitemap index. For example, an application serving Inkstone at `/docs` can include:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <sitemap>
+        <loc>https://example.test/docs/sitemap.xml</loc>
+    </sitemap>
+</sitemapindex>
+```
+
+`<sitemap>` is a child of `<sitemapindex>`; it does not belong inside a page-level `<urlset>`. Sitemap indexes normally reference sitemap files on the same site. If the documentation uses a separate configured domain, publish or submit its sitemap according to that host's ownership rules.
+
+The URL resolver honours an absolute `site.base_url`, resolves a relative base against Laravel's application URL, and otherwise uses Inkstone's named route with its configured path and fixed domain. Register `Inkstone::routes()` before generating or serving URLs that rely on the route. See [Sitemaps](/features/sitemaps) for the full resolution order.
 
 ## Serve Locally
 

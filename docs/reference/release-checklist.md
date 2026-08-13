@@ -22,6 +22,15 @@ Use this checklist before tagging an Inkstone release or switching a package rep
 - CSS and JavaScript asset URLs resolve from the configured base URL.
 - `search-index.json` or the configured search-driver index path exists.
 - `sitemap.xml` and `robots.txt` are generated when enabled.
+- `sitemap.xml` parses as UTF-8 XML in the Sitemap namespace and contains the canonical deployed document URLs.
+- A Laravel-hosted documentation sitemap URL resolves through `app(SitemapExtension::class)->url()` and is served as `application/xml`.
+- Any parent sitemap index places the documentation URL in a `<sitemap>` entry and keeps same-site hosting requirements in mind.
+
+## Extensions
+
+- Configured extensions are container-resolved and run once in declaration order after core output.
+- Custom extension artifacts are present and valid in the configured output path.
+- Extension failures fail the documentation build through the normal command error handling.
 
 ## Documentation Behavior
 

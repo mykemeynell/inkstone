@@ -176,6 +176,20 @@ Relative repository links are rewritten to raw GitHub URLs.
 
 `check_links` validates internal `<a href>` links at build time and fails the build when broken links are found. Set `check_links_level` to `'warn'` to report broken links without failing.
 
+`generate_sitemap` is the backwards-compatible switch used by the bundled `SitemapExtension`. It remains enabled by default and writes `sitemap.xml`. Configure an absolute `site.base_url` for a standards-compliant static sitemap; Laravel builds can also resolve relative bases against the application URL or infer the named Inkstone route. See [Sitemaps](/features/sitemaps).
+
+## Extensions
+
+```php
+use Inkstone\Extensions\SitemapExtension;
+
+'extensions' => [
+    SitemapExtension::class,
+],
+```
+
+Extensions are resolved lazily from the container and invoked once in declaration order after pages, search, robots metadata, and assets have been written. This supports constructor injection in Laravel and in standalone `--config` builds. Keep `SitemapExtension::class` in the list to retain the default sitemap behavior; add application extensions after or before it according to their post-build dependency.
+
 ## Demos
 
 ```php

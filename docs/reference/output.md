@@ -135,3 +135,13 @@ build/docs/robots.txt
 ```
 
 These files are useful for public documentation sites.
+
+`sitemap.xml` is produced by the default `SitemapExtension`, while `robots.txt` remains core build metadata. The existing `build.generate_sitemap` setting controls sitemap generation.
+
+Sitemap locations use the processed document URLs, including OpenAPI pages and `.html` paths when pretty URLs are disabled. Inkstone removes duplicate locations and enforces the single-sitemap protocol limits of 50,000 URLs and 50 MB uncompressed.
+
+Set `site.base_url` to an absolute deployment URL for static hosting. Laravel can resolve a relative base against the application URL or infer the configured Inkstone route. When no origin is available, Inkstone retains relative locations, emits one non-fatal warning, and leaves the build successful; production builds should supply an absolute base. See [Sitemaps](/features/sitemaps) for URL resolution and parent sitemap-index integration.
+
+## Extension Artifacts
+
+Configured build extensions run after the core output above is complete. An extension can inspect the processed documents and rendered pages, then write application-specific artifacts under the output path. See [Extension Points](/reference/extension-points).

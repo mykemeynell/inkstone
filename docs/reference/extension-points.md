@@ -27,6 +27,9 @@ CompositeDocumentDiscoverer
          -> NavigationBuilder
          -> DocumentRenderer
          -> StaticSiteGenerator
+             -> pages, search, robots metadata, and assets
+             -> BuildExtensionPipeline
+                 -> configured BuildExtension instances
 ```
 
 ## Core DTOs
@@ -38,6 +41,7 @@ CompositeDocumentDiscoverer
 | `NavigationItem` | Sidebar title, URL, active state, order, children, headings |
 | `RenderedPage` | Rendered document, HTML, and output path |
 | `SearchEntry` | Static search index entry |
+| `BuildContext` | Readonly processed documents, rendered pages, and output path passed to post-build extensions |
 | `DemoBlock` | Parsed demo language, source, metadata, expected exceptions, void flag |
 | `DemoResult` | Demo execution result, stdout, exception, rendered value state |
 
@@ -52,6 +56,7 @@ CompositeDocumentDiscoverer
 | `DocumentRenderer` | Render a page through the theme |
 | `StaticSiteGenerator` | Build the complete static site |
 | `SearchIndexer` | Produce `SearchEntry` DTOs |
+| `BuildExtension` | Run application-specific work after the core build is complete |
 | `DemoRuntime` | Execute or render demo blocks |
 | `DemoResultRenderer` | Render demo result values as HTML |
 
@@ -67,7 +72,92 @@ CompositeDocumentDiscoverer
 | `BladeDocumentRenderer` | `DocumentRenderer` |
 | `StaticDocumentationGenerator` | `StaticSiteGenerator` |
 | `JsonSearchIndexer` | `SearchIndexer` |
+| `BuildExtensionPipeline` | Resolve and invoke configured `BuildExtension` services |
+| `SitemapExtension` | `BuildExtension` |
 | `SimpleDemoRuntime` | `DemoRuntime` |
+
+## Build Extensions
+
+Build extensions add post-build behavior without modifying the generator. Each extension implements one lifecycle method:
+
+```php
+use Inkstone\Contracts\BuildExtension;
+use Inkstone\DTOs\BuildContext;
+
+final class BuildManifestExtension implements BuildExtension
+{
+    public function afterBuild(BuildContext $context): void
+    {
+        // Inspect $context->documents and $context->pages, then write an artifact
+        // beneath $context->outputPath.
+    }
+}
+```
+
+`BuildContext` is readonly and exposes:
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `documents` | `list<Document>` | Fully processed Markdown and API documents |
+| `pages` | `list<RenderedPage>` | Pages rendered and written by the build |
+| `outputPath` | `string` | Configured generated-output directory |
+
+Extensions run once, in configuration order, after pages, search, robots metadata, and assets are complete. The container resolves each class only when the extension pipeline runs, so constructor injection is available.
+
+`StaticSiteGenerator::build()` continues to return the rendered pages. Extensions receive the same page list through `BuildContext`.
+
+### Add An Application Extension
+
+For example, an application can add a small JSON build manifest:
+
+```php
+namespace App\Inkstone;
+
+use Illuminate\Filesystem\Filesystem;
+use Inkstone\Contracts\BuildExtension;
+use Inkstone\DTOs\BuildContext;
+
+final readonly class BuildManifestExtension implements BuildExtension
+{
+    public function __construct(private Filesystem $files) {}
+
+    public function afterBuild(BuildContext $context): void
+    {
+        $manifest = json_encode(
+            ['pages' => count($context->pages)],
+            JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR,
+        );
+
+        $this->files->put($context->outputPath.'/build-manifest.json', $manifest."\n");
+    }
+}
+```
+
+Register it after the bundled sitemap extension:
+
+```php
+use App\Inkstone\BuildManifestExtension;
+use Inkstone\Extensions\SitemapExtension;
+
+'extensions' => [
+    SitemapExtension::class,
+    BuildManifestExtension::class,
+],
+```
+
+The same configuration works in a standalone `inkstone.php` loaded with `--config` when Composer can autoload the extension class. An exception from any extension fails the build through the existing command error handling.
+
+### Bundled Sitemap Extension
+
+`SitemapExtension` is the first bundled extension and remains in the default configuration. It preserves the existing `build.generate_sitemap` switch and `sitemap.xml` output. Laravel applications can resolve it directly to obtain the public sitemap URL:
+
+```php
+use Inkstone\Extensions\SitemapExtension;
+
+$url = app(SitemapExtension::class)->url();
+```
+
+See [Sitemaps](/features/sitemaps) for canonical URL resolution and parent sitemap-index integration.
 
 ## Transformers
 

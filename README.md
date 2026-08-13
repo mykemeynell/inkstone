@@ -50,6 +50,16 @@ Inkstone::routes();
 
 The default route path is `/docs`. When serving through Laravel, Inkstone adjusts generated root-relative URLs to the configured route path without changing static-host builds.
 
+Inkstone also generates `sitemap.xml` by default. A parent Laravel application can obtain the documentation sitemap URL without depending on a sitemap package:
+
+```php
+use Inkstone\Extensions\SitemapExtension;
+
+$documentationSitemapUrl = app(SitemapExtension::class)->url();
+```
+
+Add that URL as a `<sitemap>` entry in the parent application's sitemap index. See [Sitemaps](docs/features/sitemaps.md) for canonical URL configuration and integration examples.
+
 ## Configuration
 
 Inkstone uses `config/inkstone.php` inside Laravel applications. In standalone package repositories, create `inkstone.php` or `config/inkstone.php` in the package root.
@@ -57,6 +67,7 @@ Inkstone uses `config/inkstone.php` inside Laravel applications. In standalone p
 ```php
 <?php
 
+use Inkstone\Extensions\SitemapExtension;
 use Phiki\Theme\Theme;
 
 return [
@@ -84,6 +95,10 @@ return [
         'driver' => env('INKSTONE_SEARCH_DRIVER', 'json'),
     ],
 
+    'extensions' => [
+        SitemapExtension::class,
+    ],
+
     'github' => [
         'repository' => env('INKSTONE_GITHUB_REPOSITORY', 'https://github.com/vendor/package'),
         'branch' => env('INKSTONE_GITHUB_BRANCH', 'main'),
@@ -99,6 +114,7 @@ Generated sites use pretty URLs by default:
 build/docs/index.html
 build/docs/installation/index.html
 build/docs/search-index.json
+build/docs/sitemap.xml
 ```
 
-The output can be deployed to GitHub Pages, Cloudflare Pages, Netlify, Vercel, or any static host.
+The output can be deployed to GitHub Pages, Cloudflare Pages, Netlify, Vercel, or any static host. Build extensions run after the pages, search index, metadata, and assets are complete, so applications can add their own generated artifacts without modifying Inkstone.
