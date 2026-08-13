@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Inkstone\Commands\Concerns;
 
+use Inkstone\Support\InkstoneConfigMerger;
 use Inkstone\Support\UrlBuilder;
 
 trait ConfiguresDocumentationOptions
@@ -19,7 +20,7 @@ trait ConfiguresDocumentationOptions
                 $loaded = require $path;
 
                 if (is_array($loaded)) {
-                    config()->set('inkstone', array_replace_recursive((array) config('inkstone', []), $loaded));
+                    config()->set('inkstone', InkstoneConfigMerger::merge((array) config('inkstone', []), $loaded));
                 }
             }
         }

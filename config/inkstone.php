@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Inkstone\Extensions\SitemapExtension;
 use Inkstone\Search\AlgoliaSearchIndexer;
 use Inkstone\Search\JsonSearchIndexer;
 use Inkstone\Search\LunrSearchIndexer;
@@ -16,6 +17,20 @@ use Inkstone\Transformers\SyntaxHighlightTransformer;
 use Phiki\Theme\Theme;
 
 return [
+
+    /*
+    |--------------------------------------------------------------------------
+    | Build Extensions
+    |--------------------------------------------------------------------------
+    |
+    | Extensions run in order after the documentation build has completed.
+    | Each class is resolved through the container when the extension runs.
+    |
+    */
+
+    'extensions' => [
+        SitemapExtension::class,
+    ],
 
     /*
     |--------------------------------------------------------------------------

@@ -46,6 +46,16 @@ final class StandaloneCliTest extends TestCase
         $this->assertFileExists($this->outputPath.'/index.html');
         $this->assertFileExists($this->outputPath.'/configuration/index.html');
         $this->assertFileExists($this->outputPath.'/search-index.json');
+        $this->assertFileExists($this->outputPath.'/robots.txt');
+        $this->assertFileExists($this->outputPath.'/sitemap.xml');
+        $this->assertStringContainsString(
+            '<loc>/docs</loc>',
+            file_get_contents($this->outputPath.'/sitemap.xml') ?: '',
+        );
+        $this->assertStringContainsString(
+            'Inkstone generated relative sitemap URLs',
+            $process->getErrorOutput(),
+        );
     }
 
     public function test_it_generates_an_ai_prompt_without_a_laravel_application(): void
